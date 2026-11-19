@@ -1,7 +1,8 @@
 Project: ${TASK}
 
 ${GOAL}
-Repository: `${REPO}` on the team Gitea, imported from ${UPSTREAM}. Commit all
+Repository: `${GITEA_REPO}` on the team Gitea (in the gitea tools, owner
+`${GITEA_ORG}` and repo `${REPO}`), imported from ${UPSTREAM}. Commit all
 work to its default branch through PRs.
 
 This is FULLY autonomous: there is NO human to ask. Define the remaining

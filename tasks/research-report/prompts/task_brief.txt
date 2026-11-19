@@ -1,7 +1,8 @@
 Project: ${TASK}
 
 ${GOAL}
-Repository: `${REPO}` on the team Gitea, started from ${UPSTREAM}. The report is
+Repository: `${GITEA_REPO}` on the team Gitea (in the gitea tools, owner
+`${GITEA_ORG}` and repo `${REPO}`), started from ${UPSTREAM}. The report is
 written there as `sections/*.md`, merged through PRs.
 
 This is FULLY autonomous: there is NO human to ask. Decide what the goal needs,
