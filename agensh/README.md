@@ -11,7 +11,7 @@ driver. Standard library only; requires Python 3.11 for `tomllib`.
 | `allocate.py` | Port and subnet slots for profiles: fixed for listed tasks, first free slot otherwise |
 | `backlog.py` | Backlog synchronization: live board claims citing `#<n>` become issue assignees |
 | `quality.py` | CI merge gate: the Actions workflow generated from acceptance commands, and the main-health timing rules and PR statuses |
-| `project.py` | Project files for repository packs: `profile`, `build` and `run` (see the [software-project pack](../tasks/software-project/README.md)) |
+| `project.py` | Project files for repository packs (`project = true` in `pack.toml`): `profile`, `build` and `run` (see the [software-project pack](../tasks/software-project/README.md)) |
 
 [`scripts/team_run.sh`](../scripts/team_run.sh) runs the driver with
 `python3 -m agensh.team_run`. The pack is `--pack`, else `AGENSH_PACK` from the

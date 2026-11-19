@@ -22,7 +22,6 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'agent'))
 from harness_config import load_config  # noqa: E402
 
-PROJECT_PACKS = ('software-project',)
 # Debian/Ubuntu images with python3, which the worker image needs for its runtime.
 BASE_IMAGES = {'default-python': 'python:3.12-bookworm'}
 NAME = re.compile(r'[a-z0-9][a-z0-9-]*')
@@ -116,8 +115,11 @@ def load_project(path):
     _known(data, ('pack', 'name', 'goal', 'goal_file', 'workspace', 'upstream', 'acceptance', 'team',
                   'budget', 'environment', 'human', 'coordination'), path.name)
     pack = data.get('pack', '')
-    if pack not in PROJECT_PACKS:
-        raise ProjectError(f'pack must be one of {", ".join(PROJECT_PACKS)}; got {pack!r}')
+    try:
+        if not load_pack(pack).project:
+            raise ProjectError(f'pack {pack!r} does not take project files')
+    except PackError as error:
+        raise ProjectError(f'pack {pack!r}: {error}') from None
     name = data.get('name', '')
     if not NAME.fullmatch(str(name)) or len(name) > 40:
         raise ProjectError(f'name must be lowercase letters, digits and hyphens (at most 40); got {name!r}')

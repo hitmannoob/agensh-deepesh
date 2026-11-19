@@ -34,6 +34,7 @@ class Pack:
     name: str
     root: Path
     prompts: Path
+    project: bool
     hooks: dict
     task_brief: Path
     idle: Path
@@ -99,11 +100,14 @@ def load_pack(name, root=ROOT):
         raise PackError(f'{path} not found')
     with path.open('rb') as stream:
         data = tomllib.load(stream)
-    _known(data, ('name', 'description', 'hooks', 'messages', 'team', 'environment', 'workspace', 'acceptance',
-                  'coordination', 'lifecycle', 'human'),
+    _known(data, ('name', 'description', 'project', 'hooks', 'messages', 'team', 'environment', 'workspace',
+                  'acceptance', 'coordination', 'lifecycle', 'human'),
            path.name)
     if data.get('name') != name:
         raise PackError(f'{path} declares name {data.get("name")!r}, expected {name!r}')
+    project = data.get('project', False)
+    if not isinstance(project, bool):
+        raise PackError('project must be true or false')
 
     def inside(relative, kind):
         resolved = (directory / relative).resolve()
@@ -201,7 +205,7 @@ def load_pack(name, root=ROOT):
             raise PackError(f'mount #{index + 1} needs an absolute target path; got {target!r}')
         mounts.append({'source': source, 'target': target, 'read_only': bool(mount.get('read_only', True))})
     return Pack(
-        name=name, root=directory, prompts=directory / 'prompts', hooks=hooks,
+        name=name, root=directory, prompts=directory / 'prompts', project=project, hooks=hooks,
         task_brief=inside(messages['task_brief'], 'message'),
         idle=inside(messages['idle'], 'message'),
         idle_delivery=inside(messages['idle_delivery'], 'message'),

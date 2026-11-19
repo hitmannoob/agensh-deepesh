@@ -2,6 +2,7 @@
 # goal in the project file (.agensh/project.toml); delivered as an upstream PR.
 name = "software-project"
 description = "Work on a real repository from a goal; deliver main upstream as a pull request"
+project = true
 
 [hooks]
 prepare = "hooks/prepare.py"    # import upstream history (or start empty), render prompts

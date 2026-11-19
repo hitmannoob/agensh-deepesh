@@ -91,7 +91,8 @@ class ProjectFileTest(unittest.TestCase):
 
     def test_rejections(self):
         cases = {
-            PROJECT.replace('software-project"', 'programbench"', 1): 'pack must be one of',
+            PROJECT.replace('software-project"', 'programbench"', 1): "pack 'programbench' does not take project files",
+            PROJECT.replace('software-project"', 'no-such-pack"', 1): "pack 'no-such-pack':",
             PROJECT.replace('name = "widget"', 'name = "Widget"'): 'name must be',
             PROJECT.replace('repo = "{upstream}"', ''): 'repo is required',
             PROJECT + 'goal_file = "x"\n': 'unknown field(s) in [team]',
