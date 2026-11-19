@@ -1,0 +1,7 @@
+Only what is merged into `main` is delivered. Every push to `main` runs `agensh / main`.
+If it fails, the author of the breaking merge is alerted first and only PRs titled
+`[fix-main] ...` or labeled `fix-main` can merge (`agensh/main-health`) until `main`
+passes again, so fixing `main` comes before new sections. ${PROTECTED_RULE}${REVIEW_RULE}
+Sections must agree with each other: when two contradict, fix it or open an issue.
+`sections/01-summary.md` answers the goal from the merged sections; keep it current.
+Do not commit `report.md`; it is built from `sections/`.

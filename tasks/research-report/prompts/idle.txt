@@ -1,0 +1,1 @@
+There is always more to do toward the goal in issue #1: look at `outline.md`, the open issues and the board for sections still missing, figures without a primary source, or sections that contradict each other; claim one and close it.

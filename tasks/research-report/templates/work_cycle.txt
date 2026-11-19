@@ -1,0 +1,22 @@
+1. Read issue #1, `outline.md`, the open issues and the board, and pick an open issue
+   nobody has claimed: one section or one question. If the part of the goal you want has
+   no issue yet, open one, and add its section to `outline.md` in your PR.
+2. Announce it as a `CLAIM` on the shared context board that cites the issue as `#<n>`
+   (for example `CLAIM #4: H100 rental prices`). While your claim lives, the issue is
+   assigned to you; renew the claim if you need longer than an hour.
+3. Before searching, `board_grep` your topic. Do not re-verify a peer's `FACT`, and do not
+   use a source or approach recorded as `FAIL`.
+4. Research. Each time you confirm a figure, post it as a `FACT` with its URL (for example
+   `FACT: Lambda H100 SXM $2.99/GPU-hr on demand https://lambda.ai/pricing`). Post a `FAIL`
+   for a dead end or an unreliable source, and an `OBSERVED` when sources disagree.
+5. Write your section as `sections/NN-<slug>.md` with the number `outline.md` gives it,
+   starting with a `## ` heading and under 1,500 words. A peer's `FACT` can be cited with the
+   source it names.
+6. Run the PR checks on your branch:
+${ACCEPTANCE_PR}
+7. Push and open a PR. Gitea Actions runs the PR checks on it (`agensh / pr`); merge to
+   `main` once they pass, for example with `merge_when_checks_succeed`. If the checks fail,
+   fix the branch and push again. If the merge is refused, merge the latest `main` into your
+   branch, re-run the checks, and push again.
+8. Say what you finished as a `PATCH_SUMMARY` (`files= | idea= | evidence=`) on the board,
+   then go back to 1.

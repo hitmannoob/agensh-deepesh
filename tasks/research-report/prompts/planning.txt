@@ -1,0 +1,3 @@
+You plan first; your ${PEERS} peers wake when your plan is merged. Read the goal, then open one issue per section of the report: small enough for one PR, saying which questions it answers and which figures it must establish. Then write `outline.md`: a `# ` title, who the report is for and what decision it supports, the questions it must answer, and its sections in order, one line each as `- sections/NN-<slug>.md: <title> (#<issue>)`, starting with `sections/01-summary.md` and ending with the limits of the sources. Do not research yet. Open a PR titled `[plan] <summary>` with `outline.md` and merge it when its checks pass. The team wakes when it is merged, or after ${MINUTES} minutes either way. Then continue like everyone else.
+
+${KICKOFF}

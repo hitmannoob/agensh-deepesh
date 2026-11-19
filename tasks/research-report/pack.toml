@@ -1,0 +1,49 @@
+# Research report: answer a question from a goal in the project file with a cited
+# report, written as one markdown file per section and delivered like a repository.
+name = "research-report"
+description = "Research a question from a goal; deliver a cited report built from one file per section"
+project = true
+
+[hooks]
+prepare = "hooks/prepare.py"    # software-project's, then add checks/, rubric.md and .gitignore to the seed
+sync = "hooks/sync.py"          # software-project's
+export = "hooks/export.py"      # software-project's
+evaluate = "hooks/evaluate.py"  # software-project's, then keep report.md and grade.json
+
+[messages]
+task_brief = "prompts/task_brief.txt"
+idle = "prompts/idle.txt"
+idle_delivery = "prompts/idle_delivery.txt"
+planning = "prompts/planning.txt"
+
+[team]
+issue_title = "{task}: research goal"
+board_id = "team"
+channel = "team-task"
+wake_stagger = "5s"
+event_context = "inline"
+
+[environment]
+network = "open"         # research needs the web; a project may restrict it
+task_prompts = "run"
+model_route = true       # AGENSH_MODEL_BASE for checks/grade.py
+
+[workspace]
+import_history = true
+
+[acceptance]
+ci_gate = true
+protected_paths = [".gitea/workflows/**", ".agensh/**", "checks/**", "rubric.md"]
+
+[coordination]
+backlog = "issues"
+
+[lifecycle]
+sync_before_end = "30m"
+resumable = true
+stop_when = ["budget", "tokens", "issue_closed"]
+finalize_notice = "15m"
+evaluate_with_services = true
+
+[human]
+product_owner = true

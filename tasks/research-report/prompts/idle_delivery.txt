@@ -1,0 +1,4 @@
+The run is in its delivery phase. Make sure finished sections are merged into `main`,
+that `main` passes, and that `sections/01-summary.md` answers the goal from what is
+merged, naming the gaps that remain. Resolve contradictions between sections. Do not
+start new sections.
