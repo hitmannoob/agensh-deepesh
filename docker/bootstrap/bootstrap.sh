@@ -389,7 +389,7 @@ for repo in "${REPO_LIST[@]}"; do
 done
 
 RUNNER_TOKEN_FILE="$TOKENS_DIR/runner.token"
-runner_tok=$(api_token GET "/api/v1/admin/runners/registration-token" 2>/dev/null \
+runner_tok=$(api_token POST "/api/v1/admin/actions/runners/registration-token" 2>/dev/null \
     | jq -r '.token // empty' || true)
 if [ -n "$runner_tok" ]; then
     install -m 0600 /dev/stdin "$RUNNER_TOKEN_FILE" <<<"$runner_tok"

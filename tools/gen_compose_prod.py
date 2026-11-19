@@ -126,7 +126,7 @@ x-mini-router-env: &mini-router-env-base
 INFRA = '''
 services:
   gitea:
-    image: docker.gitea.com/gitea:1.22.6
+    image: docker.gitea.com/gitea:1.26.4
     restart: unless-stopped
     cgroup_parent: agensh.slice
     depends_on:
@@ -182,7 +182,7 @@ services:
       retries: 12
 
   gitea-admin-init:
-    image: docker.gitea.com/gitea:1.22.6
+    image: docker.gitea.com/gitea:1.26.4
     restart: "no"
     cgroup_parent: agensh.slice
     depends_on:
