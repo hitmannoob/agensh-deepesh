@@ -128,7 +128,7 @@ token use) and keeps it in `$AGENSH_TASK_OUT/digests/`; resume summaries include
 the latest one.
 
 With `AGENSH_PLANNING=1`, worker 1 is woken first with
-[`prompts/planning.txt`](../prompts/planning.txt); the others wake when a PR
+[`prompts/planning.txt`](../prompts/planning.txt), or the pack's `[messages] planning`; the others wake when a PR
 titled `[plan] ...` is merged, or after `AGENSH_PLANNING_TIMEOUT_S`.
 
 ## Peer review and per-worker models

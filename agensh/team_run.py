@@ -473,7 +473,7 @@ class TeamRun:
         # Worker 1 writes the architecture and the issue breakdown; the others wake
         # when its `[plan]` PR is merged, or after the planning timeout.
         timeout = env_int('AGENSH_PLANNING_TIMEOUT_S', 2700)
-        plan = render_prompt(ROOT / 'prompts/planning.txt', KICKOFF=kickoff, MINUTES=str(timeout // 60),
+        plan = render_prompt(self.pack.planning, KICKOFF=kickoff, MINUTES=str(timeout // 60),
                              PEERS=str(self.workers - 1))
         log(f'planning phase: {self.org}-worker1 plans; the others wake when a [plan] PR merges (at most {timeout}s)')
         self.wake(plan, indices=[1])

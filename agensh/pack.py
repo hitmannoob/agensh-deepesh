@@ -72,6 +72,7 @@ class Pack:
     # Workers and CI get AGENSH_MODEL_BASE, the egress proxy's unmodified /raw route,
     # for a project's own model calls (metered and budgeted with the team's).
     model_route: bool = False
+    planning: Path = ROOT / 'prompts/planning.txt'
 
     def hook(self, name):
         return self.hooks.get(name)
@@ -122,7 +123,7 @@ def load_pack(name, root=ROOT):
     hooks = {hook: inside(value, f'hook {hook}') for hook, value in hooks_table.items()}
 
     messages = data.get('messages', {})
-    _known(messages, ('task_brief', 'idle', 'idle_delivery', 'reminders'), '[messages]')
+    _known(messages, ('task_brief', 'idle', 'idle_delivery', 'planning', 'reminders'), '[messages]')
     for key in ('task_brief', 'idle', 'idle_delivery'):
         if key not in messages:
             raise PackError(f'[messages] needs {key}')
@@ -217,5 +218,6 @@ def load_pack(name, root=ROOT):
         ci_gate=ci_gate, protected_paths=protected_paths, backlog=backlog, sync_before_end=sync_before_end,
         resumable=resumable, stop_when=tuple(stop_when), finalize_notice=finalize_notice, wake_stagger=wake_stagger,
         evaluate_with_services=evaluate_with_services,
+        **({'planning': inside(messages['planning'], 'message')} if 'planning' in messages else {}),
         product_owner=product_owner, event_context=event_context, model_route=model_route,
     )

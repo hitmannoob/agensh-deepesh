@@ -54,6 +54,14 @@ class MalformedPackTest(unittest.TestCase):
         self.assertEqual(pack.hooks, {})
         self.assertEqual(pack.reminders, ())
         self.assertEqual(pack.issue_title.format(task='t'), 't')
+        self.assertEqual((pack.project, pack.planning), (False, ROOT / 'prompts/planning.txt'))
+
+    def test_pack_planning_message_and_project_flag(self):
+        root = self.make('project = true\n' + MINIMAL + 'planning = "prompts/plan.txt"\n',
+                         files=('prompts/brief.txt', 'prompts/idle.txt', 'prompts/plan.txt'))
+        pack = load_pack('demo', root)
+        self.assertEqual((pack.project, pack.planning), (True, (root / 'tasks/demo/prompts/plan.txt').resolve()))
+        self.assert_rejected('project = "yes"\n' + MINIMAL, 'project must be true or false')
 
     def test_rejections(self):
         self.assert_rejected('extra = 1\n' + MINIMAL, 'unknown field(s) in pack.toml: extra')
