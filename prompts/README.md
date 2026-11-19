@@ -14,7 +14,7 @@ Template contents are experiment inputs; keep them fixed when comparing runs.
 | `lifecycle/` | Messages for resumable packs: token budget nearly spent, before a pause, before a finalize, and the resume brief with the project-state summary |
 | `main_health/` | Messages from the CI merge gate when `main` breaks, stays broken, has the restriction lifted, or recovers (packs with `ci_gate` only) |
 
-`agents.txt` leaves four places for the task pack, each filled from a file in
+`agents.txt` leaves five places for the task pack, each filled from a file in
 the pack's prompt directory:
 
 | Placeholder | Pack file | Content |
@@ -23,9 +23,10 @@ the pack's prompt directory:
 | `${TASK_FOCUS}` | `focus.txt` | What workers should keep focusing on, completing "Always focus on …;" |
 | `${TASK_WORK_CYCLE}` | `work_cycle.txt` | The numbered steps of the work cycle |
 | `${TASK_DELIVERY}` | `delivery.txt` | What must be committed for the result to count |
+| `${TASK_ROLE}` | `role.txt` | What the workers are, in the plural; `coders` when the file is missing |
 
 [`agent/render_agents.sh`](../agent/render_agents.sh) builds `/work/AGENTS.md`
-from these at worker start: a missing fragment renders empty, each fragment's
+from these at worker start: a missing fragment renders empty (except `role.txt`), each fragment's
 trailing newlines are dropped, and identity and team variables are expanded as
 before. The image and Compose provide `agents.txt` under its runtime name
 `/opt/omcgitea/prompts/agents.md` and the pack's prompt directory at

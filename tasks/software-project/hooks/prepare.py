@@ -172,10 +172,10 @@ def main():
     }
     prompts = task_out / 'prompts'
     prompts.mkdir(mode=0o755, exist_ok=True)
-    for name in ('objective', 'focus', 'work_cycle', 'delivery'):
-        rendered = render((pack.root / 'templates' / f'{name}.txt').read_text(), template_values)
-        (prompts / f'{name}.txt').write_text(rendered)
-        (prompts / f'{name}.txt').chmod(0o644)
+    for template in sorted((pack.root / 'templates').glob('*.txt')):
+        rendered = render(template.read_text(), template_values)
+        (prompts / template.name).write_text(rendered)
+        (prompts / template.name).chmod(0o644)
     (task_out / 'compose.env').write_text(f'AGENSH_TASK_PROMPTS={prompts}\nAGENSH_RUN_NETWORK={network}\n'
                                           f'AGENSH_ALLOW_DOMAINS={",".join(project.allow_domains)}\n')
     write_json(task_out / 'brief_vars.json', {'GOAL': project.goal, 'UPSTREAM': source})

@@ -15,7 +15,9 @@ TASK_OBJECTIVE="$(fragment objective)"
 TASK_FOCUS="$(fragment focus)"
 TASK_WORK_CYCLE="$(fragment work_cycle)"
 TASK_DELIVERY="$(fragment delivery)"
-export TASK_OBJECTIVE TASK_FOCUS TASK_WORK_CYCLE TASK_DELIVERY
+TASK_ROLE="$(fragment role)"
+TASK_ROLE="${TASK_ROLE:-coders}"
+export TASK_OBJECTIVE TASK_FOCUS TASK_WORK_CYCLE TASK_DELIVERY TASK_ROLE
 
 # Unrestricted, as before: identity and team variables are also expanded here.
 # Fragment text is inserted verbatim; envsubst does not expand it again.
