@@ -46,6 +46,10 @@ def env_int(name, default):
     return int(os.environ.get(name, '') or default)
 
 
+def setting_int(values, name, default):
+    return int(os.environ.get(name, '') or values.get(name, '').strip() or default)
+
+
 def read_profile(path):
     values = {}
     for line in Path(path).read_text().splitlines():
@@ -423,6 +427,7 @@ class TeamRun:
             extra = {k: str(v) for k, v in json.loads(brief_vars.read_text()).items()
                      if re.fullmatch(r'[A-Z][A-Z0-9_]*', k)}
         return render_prompt(self.pack.task_brief, **extra, TASK=self.task, REPO=self.repo,
+                             GITEA_ORG=self.org, GITEA_REPO=f'{self.org}/{self.repo}',
                              MM_TEAM_ID=team_id or '', TASK_CHANNEL_ID=channel or '')
 
     def start_quality_loops(self):
@@ -472,7 +477,7 @@ class TeamRun:
     def planning_phase(self, kickoff):
         # Worker 1 writes the architecture and the issue breakdown; the others wake
         # when its `[plan]` PR is merged, or after the planning timeout.
-        timeout = env_int('AGENSH_PLANNING_TIMEOUT_S', 2700)
+        timeout = setting_int(self.values, 'AGENSH_PLANNING_TIMEOUT_S', 2700)
         plan = render_prompt(self.pack.planning, KICKOFF=kickoff, MINUTES=str(timeout // 60),
                              PEERS=str(self.workers - 1))
         log(f'planning phase: {self.org}-worker1 plans; the others wake when a [plan] PR merges (at most {timeout}s)')
