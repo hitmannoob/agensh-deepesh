@@ -21,7 +21,7 @@ function log(...args) {
 
 function httpRequest(method, path, body) {
     return new Promise((resolve, reject) => {
-        const u = new URL(path, BOARD_URL);
+        const u = new URL(BOARD_URL.replace(/\/+$/, "") + path);
         const client = u.protocol === "https:" ? https : http;
         const payload = body ? Buffer.from(JSON.stringify(body)) : null;
         const req = client.request(
