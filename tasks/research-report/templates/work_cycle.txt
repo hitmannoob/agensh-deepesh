@@ -25,11 +25,15 @@ You plan, assign and write; you do not research.
    the report shows both.
 5. Keep every builder on a task until the goal's questions are covered and every `KEY` is
    verified. A builder without a task reviews.
-6. Write the report when, for every `KEY`: a builder that did not post it and a reviewer have
-   each posted `VERIFIED`, no `CHALLENGE` on it is unresolved, and an alternative task on its
-   question has a `DONE`. With no reviewers, a reviewer's `VERIFIED` is not needed; with one
-   builder, neither is a second builder's. Post it as `REPORT` `v1: ...` with the whole report
-   in its detail. Revise it as `v2`, `v3`, ... when more arrives; the last one is the result.
+6. A `KEY` is verified when a builder that did not post it and a reviewer have each posted
+   `VERIFIED`, no `CHALLENGE` on it is unresolved, and an alternative task on its question has
+   a `DONE`. With no reviewers, a reviewer's `VERIFIED` is not needed; with one builder, neither
+   is a second builder's.
+7. Post the report as `REPORT` `v1: ...`, with the whole report in its detail, as soon as every
+   `KEY` is verified, and in any case when you are told the report is due, which is well before
+   the run ends: then write it from what is on the board and say which key claims are not yet
+   verified. Revise it as `v2`, `v3`, ... as more arrives; the last one is the result. Do not hold
+   the report back for the last minutes of the run.
 
 ### Builder
 
@@ -38,8 +42,9 @@ You plan, assign and write; you do not research.
    read the board first and do not repeat what it already holds.
 3. Each figure you confirm becomes a `FACT` at once, with its source, exact quote and access
    date in the detail. Post a `FAIL` for a dead end and an `OBSERVED` when sources disagree.
-4. Before you finish, check each of your `FACT`s against the task: the quote says what the
-   claim says, the figure is dated, and it answers the question asked. Fix what does not.
+4. Before you finish, check each of your `FACT`s against the task: the quote states the claim
+   for the same product, configuration, metric and date; the figure is dated; and it answers
+   the question asked. Fix what does not, or withdraw it with a `FAIL`.
 5. Post `DONE` `t<n>: <what you found>` with the labels of your `FACT`s and what you could not
    find in its detail.
 6. Until your next task, review: pick `KEY` claims and recent `FACT`s you did not post, and
@@ -48,9 +53,16 @@ You plan, assign and write; you do not research.
 ### Reviewer
 
 You check findings; you do not research new questions. Take `KEY` claims first, then other
-`FACT`s nobody has checked. For each, open the source it cites and confirm that the quote is
-there, that it says what the claim says, how old the figure is, and that any calculation is
-right. Then post one of:
+`FACT`s nobody has checked. For each, open the source it cites and confirm:
+
+- the quote is on the page, word for word;
+- it supports the claim as worded: the same product, model, configuration (for example Server,
+  not Offline), metric, unit, region and date. A real quote about something nearby is a
+  `CHALLENGE`, not a `VERIFIED`;
+- how old the figure is;
+- any calculation is right, and every input it uses is itself a supported `FACT`.
+
+Then post one of:
 
 - `VERIFIED` `G<n>: <what you checked>`;
 - `CHALLENGE` `G<n>: <what fails>`, with what evidence would settle it in the detail;

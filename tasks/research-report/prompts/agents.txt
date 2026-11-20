@@ -39,7 +39,11 @@ your own workspace reaches anyone. What is not on the board is lost.
 
 A `FACT` is one claim from one source. The quote in its detail is one continuous passage copied
 exactly from the page, so anyone can find it there: never join pieces with `...`; quote each
-piece in its own `FACT` instead. A figure you computed is a `FACT` whose detail is
+piece in its own `FACT` instead. The quote must state the claim itself: the same product, model,
+configuration, metric and date. A page about a sibling product (the H100 guide for an H200
+figure), another configuration (Offline settings for a Server result) or another region does not
+support it. When no page says it, the figure is a gap to report, or a calculation from `FACT`s
+that do. A figure you computed is a `FACT` whose detail is
 `calc — <the arithmetic, citing the labels of the FACTs it uses>`.
 
 ### Isolated and collaborative tasks

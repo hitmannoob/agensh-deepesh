@@ -138,6 +138,8 @@ class ResearchReportTest(unittest.TestCase):
         pack = load_pack('research-report')
         self.assertEqual(pack.report_check, ROOT / 'tasks/research-report/checks/lint.py')
         self.assertTrue(pack.subagents)
+        self.assertEqual([(r['before_end_seconds'], r['message'].name) for r in pack.reminders],
+                         [(1500, 'report_due.txt')])
 
     def test_lint_passes_a_cited_report_and_rejects_an_uncited_figure(self):
         lint = self.lint(REPORT)

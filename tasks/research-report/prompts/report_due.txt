@@ -1,0 +1,1 @@
+The report is due. Orchestrator: if you have not posted a `REPORT`, write it now from what is on the board, say which key claims are not yet verified and which questions are open, and post it as `v1`; then keep revising it as findings arrive. Builders and reviewers: finish the task or check you are on and post it; start nothing that cannot finish in the next 15 minutes.

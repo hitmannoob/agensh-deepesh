@@ -14,6 +14,10 @@ idle_delivery = "prompts/idle_delivery.txt"
 agents = "prompts/agents.txt"
 lifecycle = "prompts/lifecycle"
 
+[[messages.reminders]]
+before_end = "25m"
+message = "prompts/report_due.txt"
+
 [team]
 issue_title = "{task}: research goal"
 board_id = "team"
