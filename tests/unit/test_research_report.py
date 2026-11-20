@@ -44,7 +44,10 @@ Per million tokens that is about $0.35.[^c1]
 FAKE_DOCKER = '''#!/bin/sh
 case "$1" in
   ps) echo omcgitea-research-report-gpu-costs-mysql-1 ;;
-  exec) cat "$BOARD_ROWS" ;;
+  exec) case "$*" in
+          *--default-character-set=utf8mb4*) cat "$BOARD_ROWS" ;;
+          *) iconv -f UTF-8 -t CP1252 "$BOARD_ROWS" ;;
+        esac ;;
 esac
 '''
 
@@ -137,7 +140,7 @@ class ResearchReportTest(unittest.TestCase):
              'delegation_id': 't1', 'ts': 1.0, 'detail': 'https://lambda.ai/pricing — "H100 SXM $2.99"'},
             {'id': 5, 'author': 'team-worker1', 'type': 'REPORT', 'content': 'v1: first',
              'delegation_id': None, 'ts': 1.5, 'detail': '# old\n'},
-        ]))
+        ], ensure_ascii=False), encoding='utf-8')
         result = self.hook('export')
         self.assertEqual(result.returncode, 0, result.stderr)
         deliver = self.task_out / '_deliver'

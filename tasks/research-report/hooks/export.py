@@ -29,9 +29,9 @@ def board_rows(values, profile, board_id):
                            capture_output=True, text=True).stdout.split()
     if not found:
         raise RuntimeError(f'the team database for {profile} is not running')
-    run = subprocess.run([*docker, 'exec', found[0], 'mysql', '-N', '-B', '--raw', '-uroot',
-                          f'-p{values.get("MYSQL_ROOT_PASSWORD", "")}', '-D', 'omcgitea',
-                          '-e', QUERY.format(board=board_id)], capture_output=True, text=True)
+    run = subprocess.run([*docker, 'exec', found[0], 'mysql', '-N', '-B', '--raw', '--default-character-set=utf8mb4',
+                          '-uroot', f'-p{values.get("MYSQL_ROOT_PASSWORD", "")}', '-D', 'omcgitea',
+                          '-e', QUERY.format(board=board_id)], capture_output=True, encoding='utf-8')
     if run.returncode != 0:
         raise RuntimeError(f'could not read the board: {run.stderr.strip()[-300:]}')
     text = run.stdout.strip()
