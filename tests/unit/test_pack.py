@@ -67,6 +67,7 @@ class MalformedPackTest(unittest.TestCase):
         pack = load_pack('demo', self.make(MINIMAL))
         self.assertEqual((pack.agents, pack.lifecycle), (ROOT / 'prompts/agents.txt', ROOT / 'prompts/lifecycle'))
         self.assertEqual((pack.mcp_servers, pack.board_types, pack.task_wakeups), ((), (), False))
+        self.assertEqual((pack.report_check, pack.subagents), (None, False))
 
     def test_pack_core_prompt_lifecycle_tools_board_and_wakeups(self):
         lifecycle = tuple(f'prompts/lifecycle/{name}' for name in
@@ -86,6 +87,12 @@ class MalformedPackTest(unittest.TestCase):
         self.assert_rejected(text.replace('"DONE"]', '"DONE", "NOTE"]'), '[team] board_types must list', files=files)
         self.assert_rejected(text.replace(', "DONE"]', ']'), 'task_wakeups needs TASK and DONE', files=files)
         self.assert_rejected(text, 'lifecycle message', files=files[:-1])
+        check = text.replace('board_types = ["FACT", "TASK", "DONE"]\n',
+                             'board_types = ["FACT", "TASK", "DONE"]\nreport_check = "prompts/brief.txt"\n')
+        self.assert_rejected(check, 'report_check needs REPORT', files=files)
+        self.assertEqual(load_pack('demo', self.make(check.replace('"DONE"]', '"DONE", "REPORT"]'), files=files)).report_check,
+                         (Path(self.directory.name) / 'tasks/demo/prompts/brief.txt').resolve())
+        self.assert_rejected(MINIMAL + '[environment]\nsubagents = "yes"\n', 'subagents must be true or false')
 
     def test_rejections(self):
         self.assert_rejected('extra = 1\n' + MINIMAL, 'unknown field(s) in pack.toml: extra')

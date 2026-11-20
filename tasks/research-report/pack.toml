@@ -22,11 +22,13 @@ wake_stagger = "5s"
 event_context = "inline"
 mcp_servers = ["board"]
 board_types = ["FACT", "OBSERVED", "FAIL", "TASK", "DONE", "KEY", "VERIFIED", "CHALLENGE", "ALTERNATIVE", "REPORT"]
+report_check = "checks/lint.py"
 
 [environment]
 network = "open"
 task_prompts = "run"
 model_route = true
+subagents = true
 
 [workspace]
 import_history = true

@@ -123,6 +123,22 @@ class ResearchReportTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn('at least 2 workers', result.stderr)
 
+    def test_lint_takes_curly_quotes_and_rejects_quotes_joined_with_an_ellipsis(self):
+        curly = REPORT.replace('— "H100 SXM $2.99 / GPU / hr" (accessed 2026-11-19)',
+                               '— “H100 SXM $2.99 / GPU / hr”. Accessed 2026-11-19.')
+        lint = self.lint(curly)
+        self.assertEqual(lint.returncode, 0, lint.stdout)
+        for joined in ('"H100 SXM ... $2.99 / GPU / hr"', '“H100 SXM … $2.99 / GPU / hr”'):
+            with self.subTest(joined=joined):
+                lint = self.lint(REPORT.replace('"H100 SXM $2.99 / GPU / hr"', joined))
+                self.assertEqual(lint.returncode, 1)
+                self.assertIn('[^1] joins text with "..."', lint.stdout)
+
+    def test_pack_checks_reports_on_the_board_and_reads_pages_through_subagents(self):
+        pack = load_pack('research-report')
+        self.assertEqual(pack.report_check, ROOT / 'tasks/research-report/checks/lint.py')
+        self.assertTrue(pack.subagents)
+
     def test_lint_passes_a_cited_report_and_rejects_an_uncited_figure(self):
         lint = self.lint(REPORT)
         self.assertEqual(lint.returncode, 0, lint.stdout)

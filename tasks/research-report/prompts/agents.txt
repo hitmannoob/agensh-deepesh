@@ -37,8 +37,9 @@ your own workspace reaches anyone. What is not on the board is lost.
 | `ALTERNATIVE` | builder or reviewer | `G41: Lambda now lists $2.49` | the other answer; post it as a `FACT` too |
 | `REPORT` | orchestrator | `v2: adds owned costs` | the whole report in markdown |
 
-A `FACT` is one claim from one source. The quote in its detail is copied exactly from the page,
-so anyone can find it there. A figure you computed is a `FACT` whose detail is
+A `FACT` is one claim from one source. The quote in its detail is one continuous passage copied
+exactly from the page, so anyone can find it there: never join pieces with `...`; quote each
+piece in its own `FACT` instead. A figure you computed is a `FACT` whose detail is
 `calc — <the arithmetic, citing the labels of the FACTs it uses>`.
 
 ### Isolated and collaborative tasks
@@ -59,8 +60,13 @@ ${TASK_DELIVERY}
 
 ## Finding sources
 
-You have `webfetch`, a shell with `curl`, and file tools. There is no search tool. To find
-pages, fetch a search engine's results page (for example
+You have `webfetch`, a shell with `curl`, file tools, and the `task` tool, which runs a
+subagent. **Read pages through a subagent**: start a `general` subagent with the URL and what you
+need, and ask it to return the exact sentences that hold each figure, copied verbatim, with the
+URL. Every page you fetch yourself stays in your context and is sent again with every later call,
+which spends the team's token budget fast; a subagent's pages do not. Fetch a page yourself only
+to look at one short passage. There is no search tool. To find pages, fetch a search engine's
+results page (for example
 `https://html.duckduckgo.com/html/?q=<words>` or `https://www.bing.com/search?q=<words>`), use a
 site's own search or API (Wikipedia, arXiv, GitHub, SEC EDGAR full-text search, PubMed), or open
 pages you know. When a site blocks you or keeps failing, post a `FAIL` naming it, so the others

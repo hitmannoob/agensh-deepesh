@@ -90,6 +90,7 @@ the pack (for example, one per ProgramBench task).
 | `coordination.planning` | pack, project | One worker plans before the others wake |
 | `coordination.task_wakeups` | pack | Direct messages when a board `TASK`, `DONE`, `KEY`, `CHALLENGE` or `ALTERNATIVE` concerns a worker (see [agensh/README.md](../agensh/README.md#board-only-teams)) |
 | `team.mcp_servers`, `team.board_types` | pack | The workers' MCP servers and the board's entry types |
+| `team.report_check`, `environment.subagents` | pack | A check the board runs on every `REPORT`; whether workers may start subagents |
 | `messages.agents`, `messages.lifecycle` | pack | The pack's own core prompt and lifecycle messages |
 | `coordination.review` | pack, project | Optional peer-review rule |
 | `brief.*` | pack | Prompt fragments (see [prompt layering](#prompt-layering)) |

@@ -68,8 +68,7 @@ def pack_mounts():
 
 
 def agents_prompt():
-    root = Path(__file__).resolve().parents[1]
-    return f'../{PACK.agents.relative_to(root)}' if root in PACK.agents.parents else str(PACK.agents)
+    return pack_file(PACK.agents)
 
 
 def pack_agent_env():
@@ -78,11 +77,25 @@ def pack_agent_env():
         lines.append(f'  AGENSH_MCP_SERVERS: "{",".join(PACK.mcp_servers)}"')
     if PACK.board_types:
         lines.append(f'  BOARD_TYPES: "{",".join(PACK.board_types)}"')
+    if PACK.subagents:
+        lines.append('  AGENSH_SUBAGENTS: "1"')
     return ''.join('\n' + line for line in lines)
 
 
+def pack_file(path):
+    root = Path(__file__).resolve().parents[1]
+    return f'../{path.relative_to(root)}' if root in path.parents else str(path)
+
+
 def board_env():
-    return f'      BOARD_TYPES: "{",".join(PACK.board_types)}"\n' if PACK.board_types else ''
+    env = f'      BOARD_TYPES: "{",".join(PACK.board_types)}"\n' if PACK.board_types else ''
+    if PACK.report_check:
+        env += '      BOARD_REPORT_CHECK: "/opt/report_check.py"\n'
+    return env
+
+
+def board_volumes():
+    return f'      - {pack_file(PACK.report_check)}:/opt/report_check.py:ro\n' if PACK.report_check else ''
 
 # Shared anchors keep model settings, limits and board access identical across workers.
 HEADER = '''
@@ -383,7 +396,7 @@ __BOARD_ENV__      BOARD_MEMBERS_JSON: >-
         ]}
     volumes:
       - ${DATA_ROOT:-../.claude-team-data}/${PROFILE}/board-lifecycle:/data/lifecycle
-    healthcheck:
+__BOARD_VOLUMES__    healthcheck:
       test: ["CMD-SHELL", "python3 -c \\"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8660/healthz', timeout=2)\\""]
       interval: 10s
       timeout: 5s
@@ -498,6 +511,7 @@ def build():
                .replace("{BOARD_MEMBERS}", members)
                .replace("__BOARD_ID__", PACK.board_id)
                .replace("__BOARD_ENV__", board_env())
+               .replace("__BOARD_VOLUMES__", board_volumes())
                .replace("__BOOTSTRAP_IMPORT__", bootstrap_import)
                .replace("__ACT_RUNNER_ENV__", runner_env))
     for short in ALL_AGENTS:

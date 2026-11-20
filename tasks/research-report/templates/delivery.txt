@@ -16,3 +16,6 @@ The report is markdown, posted as the detail of a `REPORT` entry:
 
 - It uses only findings on the board. A key claim that was not verified is said to be
   unverified. No placeholders (TODO, TBD).
+- The board checks a `REPORT` when you post it and rejects it with the problems it found: an
+  uncited figure, a footnote without a source and quote, or a quote joined with `...`. Fix them
+  and post it again.

@@ -6,6 +6,7 @@ import sys
 import unittest
 
 SERVICE = Path(__file__).resolve().parents[1]
+LINT = SERVICE.parent / "tasks/research-report/checks/lint.py"
 RESEARCH = "FACT,OBSERVED,FAIL,TASK,DONE,KEY,VERIFIED,CHALLENGE,ALTERNATIVE,REPORT"
 PROBE = """
 import json, sys
@@ -17,10 +18,12 @@ print(json.dumps({"types": TYPES, "results": [verify_note(note) for note in note
 """
 
 
-def probe(types, *notes):
-    env = {k: v for k, v in os.environ.items() if k != "BOARD_TYPES"}
+def probe(types, *notes, check=None):
+    env = {k: v for k, v in os.environ.items() if k not in ("BOARD_TYPES", "BOARD_REPORT_CHECK")}
     if types is not None:
         env["BOARD_TYPES"] = types
+    if check is not None:
+        env["BOARD_REPORT_CHECK"] = str(check)
     run = subprocess.run([sys.executable, "-c", PROBE, str(SERVICE), json.dumps(notes)],
                          env=env, capture_output=True, text=True)
     if run.returncode != 0:
@@ -60,6 +63,21 @@ class BoardTypesTest(unittest.TestCase):
         reasons = dict(zip([n["content"] for n, _ in cases], [r for _, r in result["results"]]))
         self.assertIn("TASK must read `t<n> worker<n> isolated:", reasons["worker2: H100 prices"])
         self.assertEqual(reasons["v1: first"], "REPORT needs the whole report in `detail`")
+
+    def test_a_report_that_fails_the_packs_check_is_rejected_with_its_problems(self):
+        good = "# Costs\n\nLambda lists $2.99 per GPU-hour.[^1]\n\n" \
+               "[^1]: https://lambda.ai/pricing \u2014 \u201cH100 SXM $2.99 / GPU / hr\u201d (accessed 2026-11-20)\n"
+        bad = good + "\nOwning one costs $30,000.\n"
+        result = probe(RESEARCH, {"type": "REPORT", "content": "v1: first", "detail": good},
+                       {"type": "REPORT", "content": "v2: owned", "detail": bad}, check=LINT)
+        (clean, _), (rejected, reason) = result["results"]
+        self.assertEqual(clean["content"], "v1: first")
+        self.assertIsNone(rejected)
+        self.assertTrue(reason.startswith("the report fails its check; fix these and post it again:\n"), reason)
+        self.assertIn("report.md:7: a figure without a citation: Owning one costs $30,000.", reason)
+        self.assertNotIn("/tmp", reason)
+        result = probe(RESEARCH, {"type": "REPORT", "content": "v2: owned", "detail": bad})
+        self.assertIsNotNone(result["results"][0][0])
 
     def test_unknown_types_stop_the_service(self):
         with self.assertRaises(AssertionError) as caught:

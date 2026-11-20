@@ -3,8 +3,12 @@
 
 from __future__ import annotations
 
+import os
 import re
-from typing import Dict, Tuple
+import subprocess
+import sys
+import tempfile
+from typing import Dict, Optional, Tuple
 
 from shared_lessons import (
     TYPES,
@@ -23,6 +27,29 @@ _FORMATS = {
     "ALTERNATIVE": (re.compile(r"^G\d+: \S"), "ALTERNATIVE must read `G<n>: <the other answer>`"),
     "REPORT": (re.compile(r"^v\d+: \S"), "REPORT must read `v<n>: <what changed>`"),
 }
+
+REPORT_CHECK = os.environ.get("BOARD_REPORT_CHECK", "")
+REPORT_CHECK_LINES = 40
+
+
+def check_report(text: str, check: str = REPORT_CHECK) -> Optional[str]:
+    if not check:
+        return None
+    with tempfile.TemporaryDirectory() as directory:
+        path = os.path.join(directory, "report.md")
+        with open(path, "w", encoding="utf-8") as stream:
+            stream.write(text)
+        try:
+            run = subprocess.run([sys.executable, check, path], capture_output=True, text=True, timeout=30)
+        except subprocess.TimeoutExpired:
+            return "the report check timed out"
+    if run.returncode == 0:
+        return None
+    lines = (run.stdout + run.stderr).replace(path, "report.md").strip().splitlines()
+    shown = lines[:REPORT_CHECK_LINES]
+    more = f"\n... and {len(lines) - len(shown)} more" if len(lines) > len(shown) else ""
+    return "the report fails its check; fix these and post it again:\n" + "\n".join(shown) + more
+
 
 _INVALID_EVIDENCE_PHRASES = (
     "tbd",
@@ -69,4 +96,8 @@ def verify_note(note: Dict[str, str]) -> Tuple[Dict[str, str] | None, str]:
         return None, _FORMATS[kind][1]
     if kind == "REPORT" and not str(note.get("detail") or "").strip():
         return None, "REPORT needs the whole report in `detail`"
+    if kind == "REPORT":
+        problems = check_report(str(note["detail"]))
+        if problems:
+            return None, problems
     return {"type": kind, "content": content}, "ok:1/1"

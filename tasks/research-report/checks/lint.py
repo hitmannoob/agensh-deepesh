@@ -22,8 +22,10 @@ import sys
 
 REFERENCE = re.compile(r'\[\^([A-Za-z0-9_-]+)\](?!:)')
 DEFINITION = re.compile(r'^\[\^([A-Za-z0-9_-]+)\]:\s*(.*)$')
-SOURCE = re.compile(r'https?://\S+.*"[^"]{10,}".*\(accessed \d{4}-\d{2}-\d{2}\)\s*$')
-DOCUMENT = re.compile(r'doc:\S+.*"[^"]{10,}"')
+SOURCE = re.compile(r'https?://\S+.*["\u201c][^"\u201d]{10,}["\u201d].*\baccessed \d{4}-\d{2}-\d{2}', re.IGNORECASE)
+DOCUMENT = re.compile(r'doc:\S+.*["\u201c][^"\u201d]{10,}["\u201d]')
+QUOTE = re.compile(r'["\u201c]([^"\u201d]+)["\u201d]')
+ELISION = re.compile(r'\.\.\.|\u2026')
 CALCULATION = re.compile(r'^calc\b.*\[\^[A-Za-z0-9_-]+\]')
 FIGURE = re.compile(r'(?<![\w.])[$€£]?\d+(?:,\d{3})*(?:\.\d+)?(?!\w|-[A-Za-z])')
 YEAR = re.compile(r'^(19|20)\d{2}$')
@@ -89,6 +91,9 @@ def check(path):
                 errors.append(f'{where(number)}: [^{name}] needs `<url> — "<quote of 10+ characters>" '
                               f'(accessed YYYY-MM-DD)`, `doc:<path> p.<n> — "<quote>"` or '
                               f'`calc — <arithmetic citing footnotes>`')
+            elif not CALCULATION.match(body) and any(ELISION.search(q) for q in QUOTE.findall(body)):
+                errors.append(f'{where(number)}: [^{name}] joins text with "..."; quote one continuous passage, '
+                              f'exactly as the source has it, or quote each part separately')
         references.update(REFERENCE.findall(line))
     for name in references:
         if name not in definitions:

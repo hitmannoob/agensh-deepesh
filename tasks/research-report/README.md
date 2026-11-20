@@ -42,7 +42,10 @@ A team needs at least 2 workers.
 | Builder | the rest | One task at a time: gathers evidence as `FACT`s, checks it, posts `DONE`; reviews between tasks |
 | Reviewer | the last `max(1, workers // 4)` of a team of 3 or more | Checks findings against their sources: `VERIFIED`, `CHALLENGE` or `ALTERNATIVE` |
 
-The prepare hook writes each worker's name into the prompts. The roles, the entry
+The board runs `checks/lint.py` on every `REPORT` and rejects one that fails, with the
+problems as the reason, so the orchestrator can fix the report during the run. Builders and
+reviewers read pages through opencode subagents (`[environment] subagents`), so fetched pages
+stay out of their own context. The prepare hook writes each worker's name into the prompts. The roles, the entry
 types and the isolated and collaborative tasks are described to the workers in
 [`prompts/agents.txt`](prompts/agents.txt) and [`templates/`](templates/).
 
@@ -62,5 +65,5 @@ evaluate hook) and keeps `report.md` and `grade.json` in `$AGENSH_TASK_OUT`. Wit
 
 | Check | Does |
 |---|---|
-| `checks/lint.py` | The report starts with a `# ` title; every figure in a paragraph, list item or table row cites a footnote; every footnote is a web source (`<url> — "<quote>" (accessed YYYY-MM-DD)`), a document (`doc:<path> p.<n> — "<quote>"`) or a calculation citing other footnotes; no placeholders |
+| `checks/lint.py` | The report starts with a `# ` title; every figure in a paragraph, list item or table row cites a footnote; every footnote is a web source (`<url> — "<quote>" (accessed YYYY-MM-DD)`, straight or curly quotes), a document (`doc:<path> p.<n> — "<quote>"`) or a calculation citing other footnotes; no quote joins text with `...`; no placeholders |
 | `checks/grade.py` | Scores `report.md` against `rubric.md` with a model through `AGENSH_MODEL_BASE`; writes `grade.json`; exits 1 below `--min` (default 3.5) and 2 when it could not grade |

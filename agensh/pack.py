@@ -82,6 +82,8 @@ class Pack:
     mcp_servers: tuple = ()
     board_types: tuple = ()
     task_wakeups: bool = False
+    report_check: Path | None = None
+    subagents: bool = False
 
     def hook(self, name):
         return self.hooks.get(name)
@@ -161,11 +163,14 @@ def load_pack(name, root=ROOT):
 
     team = data.get('team', {})
     _known(team, ('issue_title', 'seed_message', 'board_id', 'channel', 'wake_stagger', 'event_context',
-                  'mcp_servers', 'board_types'), '[team]')
+                  'mcp_servers', 'board_types', 'report_check'), '[team]')
     mcp_servers = choices(team.get('mcp_servers', []), MCP_SERVERS, '[team] mcp_servers')
     board_types = choices(team.get('board_types', []), BOARD_TYPES, '[team] board_types')
     if 'board' not in mcp_servers and mcp_servers:
         raise PackError('[team] mcp_servers must include board')
+    report_check = inside(team['report_check'], 'report check') if 'report_check' in team else None
+    if report_check and 'REPORT' not in board_types:
+        raise PackError('[team] report_check needs REPORT in [team] board_types')
     event_context = team.get('event_context', 'summary')
     if event_context not in ('summary', 'inline'):
         raise PackError(f'[team] event_context must be "summary" or "inline"; got {event_context!r}')
@@ -178,7 +183,10 @@ def load_pack(name, root=ROOT):
         raise PackError(f'invalid channel {channel!r}')
 
     environment = data.get('environment', {})
-    _known(environment, ('network', 'mounts', 'task_prompts', 'model_route'), '[environment]')
+    _known(environment, ('network', 'mounts', 'task_prompts', 'model_route', 'subagents'), '[environment]')
+    subagents = environment.get('subagents', False)
+    if not isinstance(subagents, bool):
+        raise PackError('[environment] subagents must be true or false')
     model_route = environment.get('model_route', False)
     if not isinstance(model_route, bool):
         raise PackError('[environment] model_route must be true or false')
@@ -259,4 +267,5 @@ def load_pack(name, root=ROOT):
         **lifecycle_messages,
         product_owner=product_owner, event_context=event_context, model_route=model_route,
         mcp_servers=mcp_servers, board_types=board_types, task_wakeups=task_wakeups,
+        report_check=report_check, subagents=subagents,
     )

@@ -92,6 +92,8 @@ off unless the pack sets it, so other packs are unchanged:
 | `[messages] lifecycle` | A directory with the pack's own `before_finalize.txt`, `before_pause.txt`, `budget_warning.txt` and `resume.txt`, instead of [`prompts/lifecycle/`](../prompts/lifecycle/) |
 | `[team] mcp_servers` | The MCP servers workers get, from `gitea`, `mattermost` and `board` (`board` is required) |
 | `[team] board_types` | The board's entry types (`BOARD_TYPES` for the board service and its MCP tool). `TASK`, `DONE`, `KEY`, `VERIFIED`, `CHALLENGE`, `ALTERNATIVE` and `REPORT` are only available this way, and the board checks their form |
+| `[team] report_check` | A script in the pack the board runs on every `REPORT` (`python3 <script> <file>`, mounted at `/opt/report_check.py` as `BOARD_REPORT_CHECK`). A non-zero exit rejects the entry, with the script's output (its first 40 lines) as the reason |
+| `[environment] subagents` | Workers get `AGENSH_SUBAGENTS=1`, for a harness adapter that lets its agent start subagents |
 | `[coordination] task_wakeups` | The driver reads the board every `AGENSH_TASK_WAKEUP_S` (default 15) seconds and sends a direct message with [`prompts/task_wakeup.txt`](../prompts/task_wakeup.txt): to the worker a `TASK` names, to worker 1 (the orchestrator) for `DONE`, `CHALLENGE` and `ALTERNATIVE`, and to the reviewers for `KEY` |
 
 Worker 1 is the orchestrator. The last `max(1, workers // 4)` workers of a team of

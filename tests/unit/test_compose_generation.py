@@ -36,7 +36,7 @@ class GeneratedComposeTest(unittest.TestCase):
         for key in ('AGENSH_REQUIRED_CHECKS', 'AGENSH_PROTECTED_FILES', 'AGENSH_LABELS', '      ACT_JOB_TIMEOUT:'):
             self.assertNotIn(key, text)
         self.assertEqual(text.count('../prompts/agents.txt:/opt/omcgitea/prompts/agents.md:ro'), 2)
-        for key in ('AGENSH_MCP_SERVERS', 'BOARD_TYPES'):
+        for key in ('AGENSH_MCP_SERVERS', 'BOARD_TYPES', 'BOARD_REPORT_CHECK', 'report_check.py', 'AGENSH_SUBAGENTS'):
             self.assertNotIn(key, text)
 
     def test_research_pack_prompt_tools_and_board_types(self):
@@ -46,6 +46,9 @@ class GeneratedComposeTest(unittest.TestCase):
         types = 'FACT,OBSERVED,FAIL,TASK,DONE,KEY,VERIFIED,CHALLENGE,ALTERNATIVE,REPORT'
         self.assertEqual(text.count(f'\n  BOARD_TYPES: "{types}"\n'), 1)
         self.assertEqual(text.count(f'\n      BOARD_TYPES: "{types}"\n'), 1)
+        self.assertEqual(text.count('\n      BOARD_REPORT_CHECK: "/opt/report_check.py"\n'), 1)
+        self.assertEqual(text.count('      - ../tasks/research-report/checks/lint.py:/opt/report_check.py:ro\n'), 1)
+        self.assertEqual(text.count('\n  AGENSH_SUBAGENTS: "1"\n'), 1)
 
     def test_worker_resources(self):
         self.assertIn('  mem_limit: 32g\n  memswap_limit: 32g\n  cpus: 2.5\n',
