@@ -19,9 +19,6 @@ deciding what to buy. 3,000-5,000 words with a summary table."""
 [workspace]
 seed = "empty"
 
-[acceptance]
-final = ["python3 checks/lint.py", "python3 checks/grade.py --model openai/gpt-6-luna"]
-
 [team]
 workers = 4
 
@@ -42,10 +39,10 @@ A team needs at least 2 workers.
 | Builder | the rest | One task at a time: gathers evidence as `FACT`s, checks it, posts `DONE`; reviews between tasks |
 | Reviewer | the last `max(1, workers // 4)` of a team of 3 or more | Checks findings against their sources: `VERIFIED`, `CHALLENGE` or `ALTERNATIVE` |
 
-The board runs `checks/lint.py` on every `REPORT` and rejects one that fails, with the
-problems as the reason, so the orchestrator can fix the report during the run. Builders and
-reviewers read pages through opencode subagents (`[environment] subagents`), so fetched pages
-stay out of their own context. The prepare hook writes each worker's name into the prompts. The roles, the entry
+There is no acceptance step: the last `REPORT` is delivered as posted. Builders and reviewers
+read pages through opencode subagents (`[environment] subagents`), one source at a time, so
+fetched pages stay out of their own context, and builders post each finding as a `FACT` before
+they open the next source. The prepare hook writes each worker's name into the prompts. The roles, the entry
 types and the isolated and collaborative tasks are described to the workers in
 [`prompts/agents.txt`](prompts/agents.txt) and [`templates/`](templates/).
 
@@ -57,13 +54,7 @@ The export hook reads the whole board from the team's database:
 |---|---|
 | `evidence.json` | Every board entry with its detail, in order |
 | `delivery.json` | The delivered `REPORT` (label, version, author) and the entry counts, or `"report": null` |
-| `_deliver/` | The last `REPORT` as `report.md`, with `README.md` (the goal), `rubric.md` and `checks/` |
+| `_deliver/` | The last `REPORT` as `report.md`, with `README.md` (the goal) |
 
-The evaluate hook runs the project's `final` commands on `_deliver/` (software-project's
-evaluate hook) and keeps `report.md` and `grade.json` in `$AGENSH_TASK_OUT`. Without a
-`REPORT` it records that in `acceptance.json` and checks nothing.
-
-| Check | Does |
-|---|---|
-| `checks/lint.py` | The report starts with a `# ` title; every figure in a paragraph, list item or table row cites a footnote; every footnote is a web source (`<url> — "<quote>" (accessed YYYY-MM-DD)`, straight or curly quotes), a document (`doc:<path> p.<n> — "<quote>"`) or a calculation citing other footnotes; no quote joins text with `...`; no placeholders |
-| `checks/grade.py` | Scores `report.md` against `rubric.md` with a model through `AGENSH_MODEL_BASE`; writes `grade.json`; exits 1 below `--min` (default 3.5) and 2 when it could not grade |
+The evaluate hook keeps `report.md` in `$AGENSH_TASK_OUT`. It checks nothing and writes no
+`acceptance.json`.

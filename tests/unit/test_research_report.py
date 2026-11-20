@@ -19,9 +19,6 @@ goal = "Compare what it costs to serve a 70B model on H100 and B200."
 [workspace]
 seed = "empty"
 
-[acceptance]
-final = ["python3 checks/lint.py"]
-
 [team]
 workers = 4
 '''
@@ -76,12 +73,6 @@ class ResearchReportTest(unittest.TestCase):
         return subprocess.run([sys.executable, str(ROOT / f'tasks/research-report/hooks/{name}.py')],
                               env=env, capture_output=True, text=True)
 
-    def lint(self, text):
-        path = Path(self.directory.name) / 'report.md'
-        path.write_text(text)
-        return subprocess.run([sys.executable, str(ROOT / 'tasks/research-report/checks/lint.py'), str(path)],
-                              capture_output=True, text=True)
-
     def test_pack_runs_the_team_on_the_board_without_gitea(self):
         pack = load_pack('research-report')
         self.assertEqual(pack.mcp_servers, ('board',))
@@ -123,32 +114,12 @@ class ResearchReportTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn('at least 2 workers', result.stderr)
 
-    def test_lint_takes_curly_quotes_and_rejects_quotes_joined_with_an_ellipsis(self):
-        curly = REPORT.replace('— "H100 SXM $2.99 / GPU / hr" (accessed 2026-11-19)',
-                               '— “H100 SXM $2.99 / GPU / hr”. Accessed 2026-11-19.')
-        lint = self.lint(curly)
-        self.assertEqual(lint.returncode, 0, lint.stdout)
-        for joined in ('"H100 SXM ... $2.99 / GPU / hr"', '“H100 SXM … $2.99 / GPU / hr”'):
-            with self.subTest(joined=joined):
-                lint = self.lint(REPORT.replace('"H100 SXM $2.99 / GPU / hr"', joined))
-                self.assertEqual(lint.returncode, 1)
-                self.assertIn('[^1] joins text with "..."', lint.stdout)
-
-    def test_pack_checks_reports_on_the_board_and_reads_pages_through_subagents(self):
+    def test_pack_delivers_reports_unchecked_and_reads_pages_through_subagents(self):
         pack = load_pack('research-report')
-        self.assertEqual(pack.report_check, ROOT / 'tasks/research-report/checks/lint.py')
+        self.assertIsNone(pack.report_check)
         self.assertTrue(pack.subagents)
         self.assertEqual([(r['before_end_seconds'], r['message'].name) for r in pack.reminders],
                          [(1500, 'report_due.txt')])
-
-    def test_lint_passes_a_cited_report_and_rejects_an_uncited_figure(self):
-        lint = self.lint(REPORT)
-        self.assertEqual(lint.returncode, 0, lint.stdout)
-        lint = self.lint(REPORT + '\nOwning one costs about $30,000.\n')
-        self.assertEqual(lint.returncode, 1)
-        self.assertIn('a figure without a citation: Owning one costs about $30,000.', lint.stdout)
-        lint = self.lint(REPORT.replace('# GPU costs', '## GPU costs'))
-        self.assertIn('start the report with a `# ` title', lint.stdout)
 
     def test_export_delivers_the_latest_report_and_the_evidence(self):
         self.rows.write_text(json.dumps([
@@ -163,17 +134,20 @@ class ResearchReportTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         deliver = self.task_out / '_deliver'
         self.assertEqual((deliver / 'report.md').read_text(), REPORT)
-        self.assertTrue((deliver / 'checks/lint.py').is_file())
-        self.assertTrue((deliver / 'rubric.md').is_file())
+        self.assertEqual(sorted(path.name for path in deliver.iterdir()), ['README.md', 'report.md'])
         self.assertIn('Compare what it costs', (deliver / 'README.md').read_text())
         delivery = json.loads((self.task_out / 'delivery.json').read_text())
+        result = self.hook('evaluate')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((self.task_out / 'report.md').read_text(), REPORT)
+        self.assertFalse((self.task_out / 'acceptance.json').exists())
         self.assertEqual(delivery['report']['label'], 'G9')
         self.assertEqual(delivery['report']['version'], 'v2')
         self.assertEqual(delivery['counts'], {'FACT': 1, 'REPORT': 2})
         evidence = json.loads((self.task_out / 'evidence.json').read_text())
         self.assertEqual([entry['label'] for entry in evidence], ['G3', 'G5', 'G9'])
 
-    def test_without_a_report_nothing_is_delivered_and_evaluation_says_so(self):
+    def test_without_a_report_nothing_is_delivered(self):
         self.rows.write_text('NULL\n')
         result = self.hook('export')
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -181,8 +155,8 @@ class ResearchReportTest(unittest.TestCase):
         self.assertEqual(json.loads((self.task_out / 'delivery.json').read_text())['error'], 'no REPORT on the board')
         result = self.hook('evaluate')
         self.assertEqual(result.returncode, 0, result.stderr)
-        acceptance = json.loads((self.task_out / 'acceptance.json').read_text())
-        self.assertEqual((acceptance['all_passed'], acceptance['error']), (False, 'no REPORT on the board'))
+        self.assertFalse((self.task_out / 'report.md').exists())
+        self.assertFalse((self.task_out / 'acceptance.json').exists())
 
 
 if __name__ == '__main__':

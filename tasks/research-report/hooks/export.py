@@ -51,8 +51,6 @@ def deliver(task_out, project, report):
     checkout.mkdir()
     (checkout / 'report.md').write_text(report['detail'].rstrip() + '\n')
     (checkout / 'README.md').write_text(f'# {project.name}\n\n{project.goal}')
-    shutil.copy2(PACK / 'rubric.md', checkout / 'rubric.md')
-    shutil.copytree(PACK / 'checks', checkout / 'checks', ignore=shutil.ignore_patterns('__pycache__'))
 
 
 def main():

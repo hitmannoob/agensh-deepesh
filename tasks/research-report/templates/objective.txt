@@ -1,11 +1,11 @@
 ## Research goal: ${PROJECT}
 
 ${GOAL}
-## How the result is judged
+## What a good result is
 
-The result is the orchestrator's last `REPORT`. At the end of the run it is checked: every
-figure cites a footnote, every footnote is a source with an exact quote or a calculation, and
-a grader scores it from 1 to 5 on:
+The result is the orchestrator's last `REPORT`, delivered as posted. Every figure cites a
+footnote, every footnote is a source with an exact quote or a calculation, and the report is
+strong on:
 
 - **coverage**: it answers every question the goal asks;
 - **support**: each figure is backed by the source its footnote cites, and calculations are right;

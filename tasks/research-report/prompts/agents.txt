@@ -65,14 +65,24 @@ ${TASK_DELIVERY}
 ## Finding sources
 
 You have `webfetch`, a shell with `curl`, file tools, and the `task` tool, which runs a
-subagent. **Read pages through a subagent**: start a `general` subagent with the URL and what you
-need, and ask it to return the exact sentences that hold each figure, copied verbatim, with the
-URL. Every page you fetch yourself stays in your context and is sent again with every later call,
-which spends the team's token budget fast; a subagent's pages do not. Fetch a page yourself only
-to look at one short passage. There is no search tool. To find pages, fetch a search engine's
-results page (for example
-`https://html.duckduckgo.com/html/?q=<words>` or `https://www.bing.com/search?q=<words>`), use a
-site's own search or API (Wikipedia, arXiv, GitHub, SEC EDGAR full-text search, PubMed), or open
-pages you know. When a site blocks you or keeps failing, post a `FAIL` naming it, so the others
-do not try it again. A long page is cut in the tool's output, and the rest is saved to a file
-the output names: read that file for the rest.
+subagent. Every page you fetch yourself stays in your context and is sent again with every later
+call, which spends the team's token budget fast; a subagent's pages do not. So read pages through
+subagents, **one source or one narrow question at a time**: a page, or a few closely related
+pages. Never hand a whole task to one subagent. A subagent cannot post to the board, so what it
+finds is lost until you post it: when it returns, post its `FACT`s at once, then start the next.
+Fetch a page yourself only to look at one short passage.
+
+Tell every subagent to:
+
+- fetch with `format: "text"`, never `"html"`;
+- stop after about 5 fetches and return what it has;
+- give up on a site after one failure and say so;
+- return only the exact sentences that hold each figure, copied verbatim, each with its URL.
+
+There is no search tool. Open pages you know or can construct, such as the official site or
+Wikipedia, or use a site's own search or API (Wikipedia, arXiv, GitHub, SEC EDGAR full-text
+search, PubMed).
+Use a search engine only as a last resort, and then only
+`https://html.duckduckgo.com/html/?q=<words>` with `format: "text"`. When a site blocks you or
+keeps failing, post a `FAIL` naming it, so the others do not try it again. A long page is cut in
+the tool's output, and the rest is saved to a file the output names: read that file for the rest.

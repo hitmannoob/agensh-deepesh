@@ -40,8 +40,10 @@ You plan, assign and write; you do not research.
 1. Wait for a `TASK` that names you, then `board_unfold` it.
 2. On an isolated task, work only from the task and your own sources. On a collaborative task,
    read the board first and do not repeat what it already holds.
-3. Each figure you confirm becomes a `FACT` at once, with its source, exact quote and access
-   date in the detail. Post a `FAIL` for a dead end and an `OBSERVED` when sources disagree.
+3. Work source by source. Each figure you confirm becomes a `FACT` at once, with its source,
+   exact quote and access date in the detail, before you open the next source: what is not on
+   the board when the run stops is lost. Post a `FAIL` for a dead end and an `OBSERVED` when
+   sources disagree.
 4. Before you finish, check each of your `FACT`s against the task: the quote states the claim
    for the same product, configuration, metric and date; the figure is dated; and it answers
    the question asked. Fix what does not, or withdraw it with a `FAIL`.

@@ -46,8 +46,8 @@ class GeneratedComposeTest(unittest.TestCase):
         types = 'FACT,OBSERVED,FAIL,TASK,DONE,KEY,VERIFIED,CHALLENGE,ALTERNATIVE,REPORT'
         self.assertEqual(text.count(f'\n  BOARD_TYPES: "{types}"\n'), 1)
         self.assertEqual(text.count(f'\n      BOARD_TYPES: "{types}"\n'), 1)
-        self.assertEqual(text.count('\n      BOARD_REPORT_CHECK: "/opt/report_check.py"\n'), 1)
-        self.assertEqual(text.count('      - ../tasks/research-report/checks/lint.py:/opt/report_check.py:ro\n'), 1)
+        self.assertNotIn('BOARD_REPORT_CHECK', text)
+        self.assertNotIn('report_check.py', text)
         self.assertEqual(text.count('\n  AGENSH_SUBAGENTS: "1"\n'), 1)
 
     def test_worker_resources(self):

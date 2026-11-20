@@ -6,7 +6,7 @@ import sys
 import unittest
 
 SERVICE = Path(__file__).resolve().parents[1]
-LINT = SERVICE.parent / "tasks/research-report/checks/lint.py"
+CHECK = Path(__file__).resolve().parent / "fixtures/report_check.py"
 RESEARCH = "FACT,OBSERVED,FAIL,TASK,DONE,KEY,VERIFIED,CHALLENGE,ALTERNATIVE,REPORT"
 PROBE = """
 import json, sys
@@ -69,7 +69,7 @@ class BoardTypesTest(unittest.TestCase):
                "[^1]: https://lambda.ai/pricing \u2014 \u201cH100 SXM $2.99 / GPU / hr\u201d (accessed 2026-11-20)\n"
         bad = good + "\nOwning one costs $30,000.\n"
         result = probe(RESEARCH, {"type": "REPORT", "content": "v1: first", "detail": good},
-                       {"type": "REPORT", "content": "v2: owned", "detail": bad}, check=LINT)
+                       {"type": "REPORT", "content": "v2: owned", "detail": bad}, check=CHECK)
         (clean, _), (rejected, reason) = result["results"]
         self.assertEqual(clean["content"], "v1: first")
         self.assertIsNone(rejected)
