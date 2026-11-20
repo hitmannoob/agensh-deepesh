@@ -69,6 +69,8 @@ EOF
     envsubst < "$CONFIG_DIR/mcp.json.tmpl" > /work/.mcp.json
     filter='.mcpServers |= with_entries(.value.timeout |= tonumber)'
     [ -z "${BOARD_SERVICE_URL:-}" ] && filter="$filter | del(.mcpServers.board)"
+    [ -n "${AGENSH_MCP_SERVERS:-}" ] && filter="$filter | .mcpServers |= with_entries(select(.key as \$k | env.AGENSH_MCP_SERVERS | split(\",\") | index(\$k)))"
+    [ -n "${BOARD_TYPES:-}" ] && filter="$filter | if .mcpServers.board then .mcpServers.board.env.BOARD_TYPES = env.BOARD_TYPES else . end"
     jq "$filter" /work/.mcp.json > /work/.mcp.json.tmp
     mv /work/.mcp.json.tmp /work/.mcp.json
     chmod 644 /work/AGENTS.md /work/CLAUDE.md /work/.mcp.json

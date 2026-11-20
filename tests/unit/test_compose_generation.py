@@ -35,6 +35,17 @@ class GeneratedComposeTest(unittest.TestCase):
         # ProgramBench has no CI gate: no required checks, protected files or job timeout.
         for key in ('AGENSH_REQUIRED_CHECKS', 'AGENSH_PROTECTED_FILES', 'AGENSH_LABELS', '      ACT_JOB_TIMEOUT:'):
             self.assertNotIn(key, text)
+        self.assertEqual(text.count('../prompts/agents.txt:/opt/omcgitea/prompts/agents.md:ro'), 2)
+        for key in ('AGENSH_MCP_SERVERS', 'BOARD_TYPES'):
+            self.assertNotIn(key, text)
+
+    def test_research_pack_prompt_tools_and_board_types(self):
+        text = generate(AGENSH_PACK='research-report', AGENSH_TASK_PROMPTS='/prompts')
+        self.assertEqual(text.count('../tasks/research-report/prompts/agents.txt:/opt/omcgitea/prompts/agents.md:ro'), 2)
+        self.assertEqual(text.count('  AGENSH_MCP_SERVERS: "board"\n'), 1)
+        types = 'FACT,OBSERVED,FAIL,TASK,DONE,KEY,VERIFIED,CHALLENGE,ALTERNATIVE,REPORT'
+        self.assertEqual(text.count(f'\n  BOARD_TYPES: "{types}"\n'), 1)
+        self.assertEqual(text.count(f'\n      BOARD_TYPES: "{types}"\n'), 1)
 
     def test_worker_resources(self):
         self.assertIn('  mem_limit: 32g\n  memswap_limit: 32g\n  cpus: 2.5\n',

@@ -1,0 +1,3 @@
+New on the board for you:
+${ENTRIES}
+Expand an entry with `board_unfold` and its label, then act on it as your role says.

@@ -6,12 +6,28 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import re
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 VALID_TYPES = ("FACT", "OBSERVED", "FAIL", "CLAIM", "PATCH_SUMMARY")
+RESEARCH_TYPES = ("TASK", "DONE", "KEY", "VERIFIED", "CHALLENGE", "ALTERNATIVE", "REPORT")
+
+
+def board_types(value: Optional[str] = None) -> Tuple[str, ...]:
+    raw = os.environ.get("BOARD_TYPES", "") if value is None else value
+    types = tuple(t.strip().upper() for t in raw.split(",") if t.strip())
+    if not types:
+        return VALID_TYPES
+    unknown = [t for t in types if t not in VALID_TYPES + RESEARCH_TYPES]
+    if unknown:
+        raise ValueError(f"unknown board type(s) in BOARD_TYPES: {', '.join(unknown)}")
+    return types
+
+
+TYPES = board_types()
 MAX_CONTENT_CHARS = 100
 MAX_PATCH_SUMMARY_CHARS = 300
 MAX_BOARD_ENTRIES = 2000
@@ -58,9 +74,9 @@ class SharedLessons:
     async def note(self, thread_id: int, type: str, content: str,
                    delegation_id: Optional[int] = None,
                    ttl_seconds: Optional[float] = None) -> Optional[Dict[str, Any]]:
-        if type not in VALID_TYPES:
+        if type not in TYPES:
             raise SharedLessonsError(
-                f"invalid type {type!r}; must be one of {VALID_TYPES}"
+                f"invalid type {type!r}; must be one of {TYPES}"
             )
         content = (content or "").strip()
         if not content:
@@ -356,7 +372,7 @@ class SharedLessons:
         return kept
 
     def _type_counts(self, entries: List[Dict[str, Any]]) -> Dict[str, int]:
-        counts = {kind: 0 for kind in VALID_TYPES}
+        counts = {kind: 0 for kind in TYPES}
         for entry in entries:
             kind = entry.get("type")
             if kind in counts:

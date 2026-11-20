@@ -14,6 +14,10 @@ STOP_CONDITIONS = ('budget', 'tokens', 'issue_closed')
 # `auto` is resolved by the pack's prepare hook into AGENSH_RUN_NETWORK (open or allowlist).
 NETWORK_MODES = ('offline', 'open', 'allowlist', 'auto')
 MOUNT_TARGET = re.compile(r'^/[A-Za-z0-9._/-]+$')
+MCP_SERVERS = ('gitea', 'mattermost', 'board')
+BOARD_TYPES = ('FACT', 'OBSERVED', 'FAIL', 'CLAIM', 'PATCH_SUMMARY',
+               'TASK', 'DONE', 'KEY', 'VERIFIED', 'CHALLENGE', 'ALTERNATIVE', 'REPORT')
+LIFECYCLE_MESSAGES = ('before_finalize.txt', 'before_pause.txt', 'budget_warning.txt', 'resume.txt')
 
 
 class PackError(ValueError):
@@ -73,6 +77,11 @@ class Pack:
     # for a project's own model calls (metered and budgeted with the team's).
     model_route: bool = False
     planning: Path = ROOT / 'prompts/planning.txt'
+    agents: Path = ROOT / 'prompts/agents.txt'
+    lifecycle: Path = ROOT / 'prompts/lifecycle'
+    mcp_servers: tuple = ()
+    board_types: tuple = ()
+    task_wakeups: bool = False
 
     def hook(self, name):
         return self.hooks.get(name)
@@ -84,6 +93,13 @@ def protected_path_list(value, where):
             isinstance(p, str) and p.strip() and not any(c in p for c in ';\n"') for p in value):
         raise PackError(f'{where} must be a list of path globs without ";" or quotes')
     return tuple(p.strip() for p in value)
+
+
+def choices(value, allowed, where):
+    if not isinstance(value, list) or not all(isinstance(v, str) and v in allowed for v in value) \
+            or len(set(value)) != len(value):
+        raise PackError(f'{where} must list distinct values from {", ".join(allowed)}')
+    return tuple(value)
 
 
 def _known(table, allowed, where):
@@ -123,7 +139,8 @@ def load_pack(name, root=ROOT):
     hooks = {hook: inside(value, f'hook {hook}') for hook, value in hooks_table.items()}
 
     messages = data.get('messages', {})
-    _known(messages, ('task_brief', 'idle', 'idle_delivery', 'planning', 'reminders'), '[messages]')
+    _known(messages, ('task_brief', 'idle', 'idle_delivery', 'planning', 'reminders', 'agents', 'lifecycle'),
+           '[messages]')
     for key in ('task_brief', 'idle', 'idle_delivery'):
         if key not in messages:
             raise PackError(f'[messages] needs {key}')
@@ -133,8 +150,22 @@ def load_pack(name, root=ROOT):
         reminders.append({'before_end_seconds': parse_duration(reminder['before_end']),
                           'message': inside(reminder['message'], 'reminder message')})
 
+    lifecycle_messages = {}
+    if 'lifecycle' in messages:
+        lifecycle_dir = (directory / messages['lifecycle']).resolve()
+        if directory.resolve() not in lifecycle_dir.parents:
+            raise PackError(f'[messages] lifecycle {messages["lifecycle"]!r} must stay inside {directory}')
+        for name in LIFECYCLE_MESSAGES:
+            inside(Path(messages['lifecycle']) / name, 'lifecycle message')
+        lifecycle_messages['lifecycle'] = lifecycle_dir
+
     team = data.get('team', {})
-    _known(team, ('issue_title', 'seed_message', 'board_id', 'channel', 'wake_stagger', 'event_context'), '[team]')
+    _known(team, ('issue_title', 'seed_message', 'board_id', 'channel', 'wake_stagger', 'event_context',
+                  'mcp_servers', 'board_types'), '[team]')
+    mcp_servers = choices(team.get('mcp_servers', []), MCP_SERVERS, '[team] mcp_servers')
+    board_types = choices(team.get('board_types', []), BOARD_TYPES, '[team] board_types')
+    if 'board' not in mcp_servers and mcp_servers:
+        raise PackError('[team] mcp_servers must include board')
     event_context = team.get('event_context', 'summary')
     if event_context not in ('summary', 'inline'):
         raise PackError(f'[team] event_context must be "summary" or "inline"; got {event_context!r}')
@@ -189,10 +220,15 @@ def load_pack(name, root=ROOT):
     if 'sync_before_end' in lifecycle and 'sync' not in hooks:
         raise PackError('[lifecycle] sync_before_end needs a sync hook')
     coordination = data.get('coordination', {})
-    _known(coordination, ('backlog',), '[coordination]')
+    _known(coordination, ('backlog', 'task_wakeups'), '[coordination]')
     backlog = coordination.get('backlog', 'board')
     if backlog not in ('board', 'issues'):
         raise PackError(f'[coordination] backlog must be "board" or "issues"; got {backlog!r}')
+    task_wakeups = coordination.get('task_wakeups', False)
+    if not isinstance(task_wakeups, bool):
+        raise PackError('[coordination] task_wakeups must be true or false')
+    if task_wakeups and not {'TASK', 'DONE'} <= set(board_types):
+        raise PackError('[coordination] task_wakeups needs TASK and DONE in [team] board_types')
     network = environment.get('network', 'offline')
     if network not in NETWORK_MODES:
         raise PackError(f'network must be one of {", ".join(NETWORK_MODES)}; got {network!r}')
@@ -219,5 +255,8 @@ def load_pack(name, root=ROOT):
         resumable=resumable, stop_when=tuple(stop_when), finalize_notice=finalize_notice, wake_stagger=wake_stagger,
         evaluate_with_services=evaluate_with_services,
         **({'planning': inside(messages['planning'], 'message')} if 'planning' in messages else {}),
+        **({'agents': inside(messages['agents'], 'core prompt')} if 'agents' in messages else {}),
+        **lifecycle_messages,
         product_owner=product_owner, event_context=event_context, model_route=model_route,
+        mcp_servers=mcp_servers, board_types=board_types, task_wakeups=task_wakeups,
     )

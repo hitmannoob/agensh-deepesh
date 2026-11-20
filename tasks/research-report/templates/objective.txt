@@ -1,36 +1,24 @@
-# 🔎 Current task: ${PROJECT}
-
-## Research goal
+## Research goal: ${PROJECT}
 
 ${GOAL}
 ## How the result is judged
 
-- The report is `sections/`, one markdown file per section, which `python3 checks/build.py`
-  joins into `report.md` in file-name order. Only merged sections are delivered.
-- Every change reaches `main` through a PR that passes the PR checks:
-${ACCEPTANCE_PR}
-- `main` must keep passing:
-${ACCEPTANCE_MAIN}
-- At the end the report is judged against `rubric.md`: whether it answers the goal, whether
-  each figure is supported by the source it cites, how disagreements between sources are
-  handled, and whether it is useful to its reader.
+The result is the orchestrator's last `REPORT`. At the end of the run it is checked: every
+figure cites a footnote, every footnote is a source with an exact quote or a calculation, and
+a grader scores it from 1 to 5 on:
+
+- **coverage**: it answers every question the goal asks;
+- **support**: each figure is backed by the source its footnote cites, and calculations are right;
+- **sources**: primary and current sources are preferred, and the date of each figure is clear;
+- **conflicts**: where sources disagree, the report shows and explains it instead of averaging;
+- **usefulness**: the summary gives its reader a clear answer and the trade-offs behind it.
 
 ## Rules
 
-1. ${HUMAN_RULE}
-2. Every figure cites a footnote, `[^1]`, defined at the end of its section as
-   `[^1]: <url> — "<exact quote that supports it>" (accessed YYYY-MM-DD)`. A figure you
-   computed cites a calculation instead: `[^c1]: calc — <the arithmetic, citing the footnotes
-   it uses>`. `python3 checks/lint.py` enforces this; read its header for the details.
-3. Prefer primary sources: vendor price pages, papers, official benchmarks, filings. Say how
-   old each figure is. When sources disagree, show both and explain the difference; never
-   average them silently.
-4. Never invent a source, a quote or a number. A gap you could not fill is a finding: say so
-   in the section.
-5. ${NETWORK}
-6. Keep each chat message under 100 words: decisions, direct questions and short
-   conclusions. Put details, links and reasoning in issues, PRs and board entries.${MODEL_RULE}
-
-## The first step is always
-
-Read issue #1, `outline.md` if it exists, the open issues and the board.
+1. There is no human to ask during this run. Settle open questions from the goal, decide, and
+   go on.
+2. Never invent a source, a quote or a number. A gap you could not fill is a finding: say so.
+3. Prefer primary sources: vendor pages, papers, official statistics and benchmarks, filings.
+   Say how old each figure is. When sources disagree, show both and explain the difference;
+   never average them silently.
+4. The network is open. Fetch what you need; do not install software you do not need.

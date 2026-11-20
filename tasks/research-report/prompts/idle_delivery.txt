@@ -1,4 +1,1 @@
-The run is in its delivery phase. Make sure finished sections are merged into `main`,
-that `main` passes, and that `sections/01-summary.md` answers the goal from what is
-merged, naming the gaps that remain. Resolve contradictions between sections. Do not
-start new sections.
+The run is near its end. Orchestrator: post the `REPORT` now from what is on the board if you have not, saying which key claims are unverified and which questions are open. Builders: post the `FACT`s you have and a `DONE` for your task; do not start new searches. Reviewers: finish the verdict you are on.

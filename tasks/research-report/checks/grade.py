@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Grade report.md against rubric.md with a model, through AGENSH_MODEL_BASE.
 
-    python3 checks/build.py && python3 checks/grade.py --model MODEL [--min 3.5]
+    python3 checks/grade.py --model MODEL [--min 3.5]
 
 The model scores each rubric criterion from 1 to 5. Writes grade.json; fails when
 the mean score is below --min.
@@ -46,7 +46,7 @@ def main():
         print('not graded: AGENSH_MODEL_BASE is not set, so there is no model to grade with')
         return 2
     if not Path('report.md').is_file():
-        print('not graded: no report.md; run python3 checks/build.py first')
+        print('not graded: no report.md')
         return 2
     rubric = Path('rubric.md').read_text()
     criteria = CRITERION.findall(rubric)

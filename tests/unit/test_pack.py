@@ -63,6 +63,30 @@ class MalformedPackTest(unittest.TestCase):
         self.assertEqual((pack.project, pack.planning), (True, (root / 'tasks/demo/prompts/plan.txt').resolve()))
         self.assert_rejected('project = "yes"\n' + MINIMAL, 'project must be true or false')
 
+    def test_minimal_pack_keeps_the_default_prompts_tools_and_board(self):
+        pack = load_pack('demo', self.make(MINIMAL))
+        self.assertEqual((pack.agents, pack.lifecycle), (ROOT / 'prompts/agents.txt', ROOT / 'prompts/lifecycle'))
+        self.assertEqual((pack.mcp_servers, pack.board_types, pack.task_wakeups), ((), (), False))
+
+    def test_pack_core_prompt_lifecycle_tools_board_and_wakeups(self):
+        lifecycle = tuple(f'prompts/lifecycle/{name}' for name in
+                          ('before_finalize.txt', 'before_pause.txt', 'budget_warning.txt', 'resume.txt'))
+        text = (MINIMAL + 'agents = "prompts/agents.txt"\nlifecycle = "prompts/lifecycle"\n'
+                '[team]\nmcp_servers = ["board"]\nboard_types = ["FACT", "TASK", "DONE"]\n'
+                '[coordination]\ntask_wakeups = true\n')
+        root = self.make(text, files=('prompts/brief.txt', 'prompts/idle.txt', 'prompts/agents.txt', *lifecycle))
+        pack = load_pack('demo', root)
+        self.assertEqual(pack.agents, (root / 'tasks/demo/prompts/agents.txt').resolve())
+        self.assertEqual(pack.lifecycle, (root / 'tasks/demo/prompts/lifecycle').resolve())
+        self.assertEqual((pack.mcp_servers, pack.board_types, pack.task_wakeups),
+                         (('board',), ('FACT', 'TASK', 'DONE'), True))
+        files = ('prompts/brief.txt', 'prompts/idle.txt', 'prompts/agents.txt', *lifecycle)
+        self.assert_rejected(text.replace('["board"]', '["gitea"]'), 'mcp_servers must include board', files=files)
+        self.assert_rejected(text.replace('"board"]', '"slack"]'), '[team] mcp_servers must list', files=files)
+        self.assert_rejected(text.replace('"DONE"]', '"DONE", "NOTE"]'), '[team] board_types must list', files=files)
+        self.assert_rejected(text.replace(', "DONE"]', ']'), 'task_wakeups needs TASK and DONE', files=files)
+        self.assert_rejected(text, 'lifecycle message', files=files[:-1])
+
     def test_rejections(self):
         self.assert_rejected('extra = 1\n' + MINIMAL, 'unknown field(s) in pack.toml: extra')
         self.assert_rejected(MINIMAL + 'extra = 1\n', 'unknown field(s) in [messages]: extra')

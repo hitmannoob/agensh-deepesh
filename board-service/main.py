@@ -18,7 +18,7 @@ import aiomysql
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from shared_lessons import SharedLessons, VALID_TYPES
+from shared_lessons import SharedLessons, TYPES
 from verifier import verify_note
 import unfold as unfold_mod
 import gquery
@@ -469,7 +469,7 @@ async def healthz() -> Dict[str, Any]:
 @app.post("/board/{board_id}/note", response_model=NoteOut)
 async def post_note(board_id: str, note: NoteIn) -> NoteOut:
     _authorize(note.thread_id, board_id)
-    clean, status = verify_note({"type": note.type, "content": note.content})
+    clean, status = verify_note({"type": note.type, "content": note.content, "detail": note.detail})
     if clean is None:
         return NoteOut(status="rejected", reason=status)
     b = STATE.board(board_id)
@@ -563,7 +563,7 @@ async def get_grep(
             )
 
     try:
-        type_filter = gquery.parse_type_list(types, VALID_TYPES)
+        type_filter = gquery.parse_type_list(types, TYPES)
     except gquery.QueryError as e:
         raise HTTPException(status_code=400, detail=f"bad `types` filter: {e}")
 

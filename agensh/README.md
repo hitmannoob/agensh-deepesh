@@ -10,6 +10,7 @@ driver. Standard library only; requires Python 3.11 for `tomllib`.
 | `schedule.py` | Budget, staggered wake, idle phase, reminder and nudge timing as pure functions |
 | `allocate.py` | Port and subnet slots for profiles: fixed for listed tasks, first free slot otherwise |
 | `backlog.py` | Backlog synchronization: live board claims citing `#<n>` become issue assignees |
+| `roles.py` | Orchestrator, builders and reviewers of a board-only team, and which board entries wake whom |
 | `quality.py` | CI merge gate: the Actions workflow generated from acceptance commands, and the main-health timing rules and PR statuses |
 | `project.py` | Project files for repository packs (`project = true` in `pack.toml`): `profile`, `build` and `run` (see the [software-project pack](../tasks/software-project/README.md)) |
 
@@ -79,6 +80,23 @@ driver removes only the assignments it made. Closed issues keep their
 assignees as the record of who did the work. Synchronization is one-way: the
 board stays the source of truth for who is working on what.
 
+## Board-only teams
+
+A pack can run its team on the board alone, as the
+[research-report pack](../tasks/research-report/README.md) does. Each setting is
+off unless the pack sets it, so other packs are unchanged:
+
+| Setting | Does |
+|---|---|
+| `[messages] agents` | The workers' core prompt, instead of [`prompts/agents.txt`](../prompts/agents.txt) |
+| `[messages] lifecycle` | A directory with the pack's own `before_finalize.txt`, `before_pause.txt`, `budget_warning.txt` and `resume.txt`, instead of [`prompts/lifecycle/`](../prompts/lifecycle/) |
+| `[team] mcp_servers` | The MCP servers workers get, from `gitea`, `mattermost` and `board` (`board` is required) |
+| `[team] board_types` | The board's entry types (`BOARD_TYPES` for the board service and its MCP tool). `TASK`, `DONE`, `KEY`, `VERIFIED`, `CHALLENGE`, `ALTERNATIVE` and `REPORT` are only available this way, and the board checks their form |
+| `[coordination] task_wakeups` | The driver reads the board every `AGENSH_TASK_WAKEUP_S` (default 15) seconds and sends a direct message with [`prompts/task_wakeup.txt`](../prompts/task_wakeup.txt): to the worker a `TASK` names, to worker 1 (the orchestrator) for `DONE`, `CHALLENGE` and `ALTERNATIVE`, and to the reviewers for `KEY` |
+
+Worker 1 is the orchestrator. The last `max(1, workers // 4)` workers of a team of
+three or more are reviewers, and the rest are builders (`roles.py`).
+
 ## Run lifecycle
 
 A pack with `[lifecycle] resumable = true` keeps its state between run segments.
@@ -96,7 +114,7 @@ written to `$AGENSH_TASK_OUT/control` by `python3 -m agensh.project pause` or
 | finalize | the wall clock, issue #1 closed, or a finalize request | Tells workers to wrap up `finalize_notice` before a timed end (or for the grace period otherwise), syncs upstream, exports, stops and evaluates |
 
 At 90% of the token budget every worker gets
-[`prompts/lifecycle/budget_warning.txt`](../prompts/lifecycle/budget_warning.txt);
+[`prompts/lifecycle/budget_warning.txt`](../prompts/lifecycle/budget_warning.txt) (or the pack's `[messages] lifecycle` copy);
 at 100% the egress proxy refuses model requests with HTTP 429 and the driver
 pauses. `resume` brings the services back, syncs upstream, clears the stored
 ACP session ids so every worker starts a fresh native session, and wakes each

@@ -66,6 +66,24 @@ def pack_mounts():
     return '\n'.join(f"      - {m['source']}:{m['target']}{':ro' if m['read_only'] else ''}"
                      for m in PACK.mounts)
 
+
+def agents_prompt():
+    root = Path(__file__).resolve().parents[1]
+    return f'../{PACK.agents.relative_to(root)}' if root in PACK.agents.parents else str(PACK.agents)
+
+
+def pack_agent_env():
+    lines = []
+    if PACK.mcp_servers:
+        lines.append(f'  AGENSH_MCP_SERVERS: "{",".join(PACK.mcp_servers)}"')
+    if PACK.board_types:
+        lines.append(f'  BOARD_TYPES: "{",".join(PACK.board_types)}"')
+    return ''.join('\n' + line for line in lines)
+
+
+def board_env():
+    return f'      BOARD_TYPES: "{",".join(PACK.board_types)}"\n' if PACK.board_types else ''
+
 # Shared anchors keep model settings, limits and board access identical across workers.
 HEADER = '''
 name: omcgitea
@@ -359,7 +377,7 @@ __ACT_RUNNER_ENV__    volumes:
       MYSQL_DSN: "mysql://omcgitea:${MYSQL_PASSWORD}@mysql:3306/omcgitea"
       BOARD_LISTEN_PORT: "8660"
       BOARD_LIFECYCLE_DIR: "/data/lifecycle"
-      BOARD_MEMBERS_JSON: >-
+__BOARD_ENV__      BOARD_MEMBERS_JSON: >-
         {"__BOARD_ID__":[
 {BOARD_MEMBERS}
         ]}
@@ -391,7 +409,7 @@ AGENT_BLOCK = '''
       - ${DATA_ROOT:-../.claude-team-data}/${PROFILE}/tokens/agent-${ORG_NAME}-__SHORT__.token:/run/omcgitea/tokens/agent-${ORG_NAME}-__SHORT__.token:ro
       - ${DATA_ROOT:-../.claude-team-data}/${PROFILE}/tokens/agent-${ORG_NAME}-__SHORT__-mm.token:/run/omcgitea/tokens/agent-${ORG_NAME}-__SHORT__-mm.token:ro
 __PACK_MOUNTS__
-      - ../prompts/agents.txt:/opt/omcgitea/prompts/agents.md:ro
+      - __AGENTS_PROMPT__:/opt/omcgitea/prompts/agents.md:ro
       - __TASK_PROMPTS__:/opt/omcgitea/task-prompts:ro
       - ../agent/render_agents.sh:/opt/omcgitea/render_agents.sh:ro
       - ../agent/config/mcp_deny_tools.json:/opt/omcgitea/config/mcp_deny_tools.json:ro
@@ -459,7 +477,8 @@ def build():
     out.append(HEADER.replace('__HARNESS_ENV__', harness_env)
                .replace('__WORKER_RESOURCES__', worker_resources())
                .replace('__BOARD_ID__', PACK.board_id)
-               .replace('  TASK_CHANNEL: "__TASK_CHANNEL__"', f'  TASK_CHANNEL: "{PACK.channel}"{proxy_env()}')
+               .replace('  TASK_CHANNEL: "__TASK_CHANNEL__"',
+                        f'  TASK_CHANNEL: "{PACK.channel}"{proxy_env()}{pack_agent_env()}')
                .replace('${AGENT_HARNESS:-copilot}', '${AGENT_HARNESS:-' + AGENT_HARNESS + '}')
                .replace(ROUTER_ENV_TAIL, ROUTER_ENV_TAIL + router_env()))
     members = ",\n".join(f'          "${{ORG_NAME}}-{s}"' for s in ALL_AGENTS)
@@ -478,6 +497,7 @@ def build():
     out.append(INFRA.replace("{AGENTS_CSV}", agents_csv)
                .replace("{BOARD_MEMBERS}", members)
                .replace("__BOARD_ID__", PACK.board_id)
+               .replace("__BOARD_ENV__", board_env())
                .replace("__BOOTSTRAP_IMPORT__", bootstrap_import)
                .replace("__ACT_RUNNER_ENV__", runner_env))
     for short in ALL_AGENTS:
@@ -491,7 +511,7 @@ def build():
         # Per-run prompts are rendered by the pack's prepare hook (see agensh/README.md).
         prompts = ('${AGENSH_TASK_PROMPTS:?AGENSH_TASK_PROMPTS is set by the prepare hook}'
                    if PACK.task_prompts == 'run' else f'../tasks/{PACK.name}/prompts')
-        out.append(block.replace("__TASK_PROMPTS__", prompts))
+        out.append(block.replace("__TASK_PROMPTS__", prompts).replace("__AGENTS_PROMPT__", agents_prompt()))
     for short in ALL_AGENTS:
         out.append(ROUTER_BLOCK.replace("__SHORT__", short))
     return "".join(out)

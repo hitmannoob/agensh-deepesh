@@ -14,6 +14,30 @@ const BOARD_URL = process.env.BOARD_SERVICE_URL || "http://board-service:8660";
 const AGENT = process.env.AGENT_NAME || "unknown-agent";
 const BOARD_IDS = (process.env.BOARD_IDS || "").split(",").map((s) => s.trim()).filter(Boolean);
 const MAX_BOARD_ENTRIES = 2000;
+const PACK_TYPES = (process.env.BOARD_TYPES || "").split(",").map((s) => s.trim().toUpperCase()).filter(Boolean);
+const TYPES = PACK_TYPES.length ? PACK_TYPES : ["FACT", "OBSERVED", "FAIL", "PATCH_SUMMARY", "CLAIM"];
+const FORMATS = {
+    TASK: "TASK `t<n> worker<n> isolated: <what to find>` (or `collaborative`)",
+    DONE: "DONE `t<n>: <what was found>`",
+    KEY: "KEY `G<n>: <why the report depends on it>`",
+    VERIFIED: "VERIFIED `G<n>: <what you checked>`",
+    CHALLENGE: "CHALLENGE `G<n>: <what fails>`",
+    ALTERNATIVE: "ALTERNATIVE `G<n>: <the other answer>`",
+    REPORT: "REPORT `v<n>: <what changed>` with the whole report in detail",
+};
+
+function packWriteDescription() {
+    const formats = TYPES.filter((t) => FORMATS[t]).map((t) => FORMATS[t]);
+    return (
+        `Write a typed gist to the shared context board. Types: ${TYPES.join(", ")}. ` +
+        `Content max 100 chars.` +
+        (formats.length ? ` Formats: ${formats.join("; ")}.` : "") +
+        ` Server runs a deterministic verifier; returns "admitted" with the entry's label (G<n>), or ` +
+        `"rejected" with the reason. Pass "detail" to store the FULL text behind the gist: peers see ` +
+        `only your short gist, and can expand it with board_unfold using its label. Put a FACT's ` +
+        `source, exact quote and access date there.`
+    );
+}
 
 function log(...args) {
     process.stderr.write("[mcp-board] " + args.map(String).join(" ") + "\n");
@@ -70,7 +94,7 @@ const TOOLS = [
         name: "board_read",
         description:
             `Read the shared context board. Returns the full recent board ` +
-            `(FACT / OBSERVED / FAIL / PATCH_SUMMARY / CLAIM), newest ${MAX_BOARD_ENTRIES} if the ` +
+            `(${TYPES.join(" / ")}), newest ${MAX_BOARD_ENTRIES} if the ` +
             `board is larger than that. ` +
             `For anything older than the board still holds, use board_grep. ` +
             (BOARD_IDS.length ? `You have access to boards: ${BOARD_IDS.join(", ")}.` : ""),
@@ -92,7 +116,7 @@ const TOOLS = [
     },
     {
         name: "board_write",
-        description:
+        description: PACK_TYPES.length ? packWriteDescription() :
             `Write a typed gist to the shared context board. Types: FACT, OBSERVED, FAIL, PATCH_SUMMARY, CLAIM. ` +
             `FACT/OBSERVED/FAIL/CLAIM: max 100 chars. PATCH_SUMMARY: max 300 chars, must use format ` +
             `"files=A/B/C | idea=D | evidence=E | risk=F"; evidence cannot be tbd/pending/unverified/etc. ` +
@@ -106,7 +130,7 @@ const TOOLS = [
                 board_id: boardIdSchema("write to"),
                 type: {
                     type: "string",
-                    enum: ["FACT", "OBSERVED", "FAIL", "PATCH_SUMMARY", "CLAIM"],
+                    enum: TYPES,
                 },
                 content: { type: "string", description: "The short gist (see caps above)" },
                 detail: {
@@ -171,11 +195,14 @@ const TOOLS = [
                 },
                 types: {
                     type: "string",
-                    description:
-                        "Optional filter on note type, '|' separated (a note has exactly one " +
-                        "type, so these OR together). One or more of FACT, OBSERVED, FAIL, " +
-                        "PATCH_SUMMARY, CLAIM. Omit to search all types. " +
-                        "e.g. \"FAIL|PATCH_SUMMARY\" to see only what was ruled out or fixed.",
+                    description: PACK_TYPES.length
+                        ? "Optional filter on note type, '|' separated (a note has exactly one " +
+                          `type, so these OR together). One or more of ${TYPES.join(", ")}. ` +
+                          `Omit to search all types. e.g. "${TYPES.slice(0, 2).join("|")}".`
+                        : "Optional filter on note type, '|' separated (a note has exactly one " +
+                          "type, so these OR together). One or more of FACT, OBSERVED, FAIL, " +
+                          "PATCH_SUMMARY, CLAIM. Omit to search all types. " +
+                          "e.g. \"FAIL|PATCH_SUMMARY\" to see only what was ruled out or fixed.",
                 },
             },
             required: ["board_id"],

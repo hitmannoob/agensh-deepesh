@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""Check the report's sections: every figure cites a source, every source can be checked.
+"""Check report.md: every figure cites a source, every source can be checked.
 
-    python3 checks/lint.py
+    python3 checks/lint.py [report.md]
 
-A section is sections/NN-<slug>.md and starts with a `## ` heading. A paragraph, list
-item or table row that states a figure (a number such as $2.49, 3,000 tok/s or 80 GB;
-not a year or a name like H100 or 70B) cites a footnote, [^1]. Each footnote is defined
-in the same section, either as a source:
+The report starts with a `# ` title. A paragraph, list item or table row that states a
+figure (a number such as $2.49, 3,000 tok/s or 80 GB; not a year or a name like H100 or 70B)
+cites a footnote, [^1]. Each footnote is defined once and cited at least once, either as a
+source on the web or in an uploaded document:
 
     [^1]: https://example.com/pricing — "the exact text that supports the figure" (accessed 2026-11-19)
+    [^2]: doc:docs/vendor-quote.pdf p.4 — "the exact text that supports the figure"
 
 or as a calculation from other footnotes:
 
@@ -19,10 +20,10 @@ from pathlib import Path
 import re
 import sys
 
-SECTION_NAME = re.compile(r'\d{2}-[a-z0-9-]+\.md')
 REFERENCE = re.compile(r'\[\^([A-Za-z0-9_-]+)\](?!:)')
 DEFINITION = re.compile(r'^\[\^([A-Za-z0-9_-]+)\]:\s*(.*)$')
 SOURCE = re.compile(r'https?://\S+.*"[^"]{10,}".*\(accessed \d{4}-\d{2}-\d{2}\)\s*$')
+DOCUMENT = re.compile(r'doc:\S+.*"[^"]{10,}"')
 CALCULATION = re.compile(r'^calc\b.*\[\^[A-Za-z0-9_-]+\]')
 FIGURE = re.compile(r'(?<![\w.])[$€£]?\d+(?:,\d{3})*(?:\.\d+)?(?!\w|-[A-Za-z])')
 YEAR = re.compile(r'^(19|20)\d{2}$')
@@ -30,7 +31,6 @@ VERSION = re.compile(r'[A-Z][\w-]*\s$')
 PLACEHOLDER = re.compile(r'\b(TODO|TBD|FIXME|XXX)\b|lorem ipsum', re.IGNORECASE)
 TABLE_SEPARATOR = re.compile(r'^\|?\s*:?-{3,}')
 LIST_ITEM = re.compile(r'^\s*([-*+]|\d+\.)\s+')
-MAX_WORDS = 1500
 
 
 def is_figure(text, match):
@@ -68,15 +68,13 @@ def claims(lines):
         yield start, ' '.join(paragraph)
 
 
-def check_section(path):
+def check(path):
     errors = []
     lines = path.read_text().splitlines()
     where = lambda number: f'{path}:{number}'
-    if not SECTION_NAME.fullmatch(path.name):
-        errors.append(f'{path}: name it sections/NN-<slug>.md (two digits, lowercase, hyphens)')
     first = next(((n, l) for n, l in enumerate(lines, 1) if l.strip()), None)
-    if not first or not first[1].startswith('## '):
-        errors.append(f'{where(first[0] if first else 1)}: start the section with a `## ` heading')
+    if not first or not first[1].startswith('# '):
+        errors.append(f'{where(first[0] if first else 1)}: start the report with a `# ` title')
     definitions, references = {}, Counter()
     for number, line in enumerate(lines, 1):
         if PLACEHOLDER.search(line):
@@ -87,45 +85,32 @@ def check_section(path):
             if name in definitions:
                 errors.append(f'{where(number)}: footnote [^{name}] is defined twice')
             definitions[name] = (number, body)
-            if not SOURCE.match(body) and not CALCULATION.match(body):
+            if not SOURCE.match(body) and not DOCUMENT.match(body) and not CALCULATION.match(body):
                 errors.append(f'{where(number)}: [^{name}] needs `<url> — "<quote of 10+ characters>" '
-                              f'(accessed YYYY-MM-DD)` or `calc — <arithmetic citing footnotes>`')
+                              f'(accessed YYYY-MM-DD)`, `doc:<path> p.<n> — "<quote>"` or '
+                              f'`calc — <arithmetic citing footnotes>`')
         references.update(REFERENCE.findall(line))
     for name in references:
         if name not in definitions:
-            errors.append(f'{path}: [^{name}] is cited but not defined in this section')
+            errors.append(f'{path}: [^{name}] is cited but not defined')
     for name, (number, _) in definitions.items():
         if name not in references:
             errors.append(f'{where(number)}: [^{name}] is defined but never cited')
     for number, text in claims(lines):
         if states_a_figure(text) and not REFERENCE.search(text):
             errors.append(f'{where(number)}: a figure without a citation: {text[:100]}')
-    body = [line for line in lines if not DEFINITION.match(line.strip())]
-    words = len(' '.join(body).split())
-    if words > MAX_WORDS:
-        errors.append(f'{path}: {words} words; keep a section under {MAX_WORDS} (split it)')
     return errors, len(definitions)
 
 
 def main():
-    sections = sorted(Path('sections').glob('*.md'))
-    errors, sources = [], 0
-    for path in sections:
-        found, count = check_section(path)
-        errors += found
-        sources += count
-    numbers = Counter(path.name[:2] for path in sections if SECTION_NAME.fullmatch(path.name))
-    for number, count in sorted(numbers.items()):
-        if count > 1:
-            errors.append(f'sections/: {count} sections are numbered {number}; renumber one (see outline.md)')
-    if Path('outline.md').is_file():
-        for number, line in enumerate(Path('outline.md').read_text().splitlines(), 1):
-            if PLACEHOLDER.search(line):
-                errors.append(f'outline.md:{number}: placeholder text: {line.strip()[:80]}')
+    path = Path(sys.argv[1] if len(sys.argv) > 1 else 'report.md')
+    if not path.is_file():
+        print(f'{path}: no report')
+        return 1
+    errors, sources = check(path)
     for error in errors:
         print(error)
-    print(f'{len(sections)} sections, {sources} footnotes: '
-          + (f'{len(errors)} problem(s)' if errors else 'ok'))
+    print(f'{path}: {sources} footnotes: ' + (f'{len(errors)} problem(s)' if errors else 'ok'))
     return 1 if errors else 0
 
 

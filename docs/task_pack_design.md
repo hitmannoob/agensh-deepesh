@@ -88,6 +88,9 @@ the pack (for example, one per ProgramBench task).
 | `human.mode`, `human.username` | pack, project | `none` or `optional`; the human's account name |
 | `coordination.backlog` | pack | `issues` or `board` (board = current CLAIM-only behavior) |
 | `coordination.planning` | pack, project | One worker plans before the others wake |
+| `coordination.task_wakeups` | pack | Direct messages when a board `TASK`, `DONE`, `KEY`, `CHALLENGE` or `ALTERNATIVE` concerns a worker (see [agensh/README.md](../agensh/README.md#board-only-teams)) |
+| `team.mcp_servers`, `team.board_types` | pack | The workers' MCP servers and the board's entry types |
+| `messages.agents`, `messages.lifecycle` | pack | The pack's own core prompt and lifecycle messages |
 | `coordination.review` | pack, project | Optional peer-review rule |
 | `brief.*` | pack | Prompt fragments (see [prompt layering](#prompt-layering)) |
 | `team.workers`, `budget.*` | project | Team size, wall-clock and token budgets |

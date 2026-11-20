@@ -23,7 +23,7 @@ import time
 import urllib.error
 import urllib.request
 
-from agensh import backlog, quality, schedule
+from agensh import backlog, quality, roles, schedule
 from agensh.pack import PackError, load_pack
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -435,6 +435,8 @@ class TeamRun:
             self.start_thread(self.main_health)
         if self.pack.backlog == 'issues':
             self.start_thread(self.backlog_sync)
+        if self.pack.task_wakeups:
+            self.start_thread(self.task_wakeups)
 
     def drive(self):
         self.push_seed()
@@ -464,7 +466,7 @@ class TeamRun:
         self.fresh_sessions()
         self.start_quality_loops()
         team_id, channel = self.mm.ensure_task_channel(self.channel_members())
-        message = render_prompt(ROOT / 'prompts/lifecycle/resume.txt',
+        message = render_prompt(self.pack.lifecycle / 'resume.txt',
                                 TASK_BRIEF=self.render_brief(team_id, channel), STATE_SUMMARY=self.state_summary())
         self.wake(message)
 
@@ -821,6 +823,31 @@ sys.exit(json.load(urllib.request.urlopen(request, timeout=15)).get('status') !=
                 log(f'WARN: backlog sync failed: {error}')
             self.stop.wait(interval)
 
+    def task_wakeup_tick(self, after):
+        entries = self.board_entries()
+        if entries is None:
+            return after
+        for worker, notices in roles.wakeups(entries, self.workers, after).items():
+            name = f'{self.org}-worker{worker}'
+            lines = '\n'.join(f'- {label} {kind} by {author}: {content}' for kind, label, author, content in notices)
+            dm = self.mm.dm_channel(name)
+            if dm and self.mm.post(dm, render_prompt(ROOT / 'prompts/task_wakeup.txt', ENTRIES=lines)):
+                log(f'task wake-up: {name} for {", ".join(label for _, label, _, _ in notices)}')
+            else:
+                log(f'WARN: task wake-up DM to {name} failed')
+        return max(after, roles.last_label(entries))
+
+    def task_wakeups(self):
+        interval = env_int('AGENSH_TASK_WAKEUP_S', 15)
+        log(f'task wake-ups: checking the board every {interval}s')
+        after = 0 if self.mode == 'run' else roles.last_label(self.board_entries() or [])
+        while not self.stop.is_set():
+            try:
+                after = self.task_wakeup_tick(after)
+            except Exception as error:
+                log(f'WARN: task wake-up failed: {error}')
+            self.stop.wait(interval)
+
     def direct_message(self, worker, message):
         dm = self.mm.dm_channel(worker)
         if not dm or not self.mm.post(dm, message):
@@ -989,7 +1016,7 @@ sys.exit(json.load(urllib.request.urlopen(request, timeout=15)).get('status') !=
                 warned = True
                 percent = str(100 * used // limit)
                 log(f'token budget at {percent}%: {used} of {limit}; warning every worker')
-                message = render_prompt(ROOT / 'prompts/lifecycle/budget_warning.txt', PERCENT=percent,
+                message = render_prompt(self.pack.lifecycle / 'budget_warning.txt', PERCENT=percent,
                                         USED=str(used), LIMIT=str(limit))
                 for worker in self.worker_names():
                     self.direct_message(worker, message)
@@ -1032,7 +1059,7 @@ sys.exit(json.load(urllib.request.urlopen(request, timeout=15)).get('status') !=
         # A segment shorter than the notice gets none: the brief already gives its length.
         notice = self.pack.finalize_notice
         if remaining > notice and not self.stop.wait(remaining - notice):
-            message = render_prompt(ROOT / 'prompts/lifecycle/before_finalize.txt',
+            message = render_prompt(self.pack.lifecycle / 'before_finalize.txt',
                                     MINUTES=str(max(1, min(notice, remaining) // 60)))
             log('telling workers the run is about to finalize')
             for worker in self.worker_names():
@@ -1055,7 +1082,7 @@ sys.exit(json.load(urllib.request.urlopen(request, timeout=15)).get('status') !=
         # Workers get the grace period to push and record their work.
         if grace <= 0:
             return
-        message = render_prompt(ROOT / f'prompts/lifecycle/{template}', **variables)
+        message = render_prompt(self.pack.lifecycle / template, **variables)
         for worker in self.worker_names():
             self.direct_message(worker, message)
         log(f'waiting {grace}s for workers to push and record their work')

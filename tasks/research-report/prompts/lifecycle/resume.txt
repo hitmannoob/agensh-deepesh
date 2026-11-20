@@ -1,0 +1,5 @@
+The run resumes after a pause. You start with a fresh session: earlier conversations are gone, and what the team found is on the board. The task is unchanged:
+
+${TASK_BRIEF}
+
+Read the board before you act: the latest `TASK` for you, and the `DONE`, `KEY` and `REPORT` entries.

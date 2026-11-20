@@ -1,7 +1,18 @@
-Only what is merged into `main` is delivered. Every push to `main` runs `agensh / main`.
-If it fails, the author of the breaking merge is alerted first and only PRs titled
-`[fix-main] ...` or labeled `fix-main` can merge (`agensh/main-health`) until `main`
-passes again, so fixing `main` comes before new sections. ${PROTECTED_RULE}${REVIEW_RULE}
-Sections must agree with each other: when two contradict, fix it or open an issue.
-`sections/01-summary.md` answers the goal from the merged sections; keep it current.
-Do not commit `report.md`; it is built from `sections/`.
+## The report
+
+The report is markdown, posted as the detail of a `REPORT` entry:
+
+- It starts with a `# ` title, then a summary that answers the goal directly, then one `## `
+  section per question, and ends with the gaps and the limits of the sources.
+- Every figure in a paragraph, list item or table row cites a footnote, `[^1]`. Footnotes are
+  defined at the end of the report, each cited at least once, and are either a source copied
+  from a `FACT`'s detail:
+
+      [^1]: https://lambda.ai/pricing — "H100 SXM $2.99 / GPU / hr" (accessed 2026-11-20)
+
+  or a calculation citing other footnotes:
+
+      [^c1]: calc — $2.99/hr [^1] × 8,760 h = $26,192 per GPU-year
+
+- It uses only findings on the board. A key claim that was not verified is said to be
+  unverified. No placeholders (TODO, TBD).

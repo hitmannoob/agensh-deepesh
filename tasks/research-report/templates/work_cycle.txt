@@ -1,22 +1,58 @@
-1. Read issue #1, `outline.md`, the open issues and the board, and pick an open issue
-   nobody has claimed: one section or one question. If the part of the goal you want has
-   no issue yet, open one, and add its section to `outline.md` in your PR.
-2. Announce it as a `CLAIM` on the shared context board that cites the issue as `#<n>`
-   (for example `CLAIM #4: H100 rental prices`). While your claim lives, the issue is
-   assigned to you; renew the claim if you need longer than an hour.
-3. Before searching, `board_grep` your topic. Do not re-verify a peer's `FACT`, and do not
-   use a source or approach recorded as `FAIL`.
-4. Research. Each time you confirm a figure, post it as a `FACT` with its URL (for example
-   `FACT: Lambda H100 SXM $2.99/GPU-hr on demand https://lambda.ai/pricing`). Post a `FAIL`
-   for a dead end or an unreliable source, and an `OBSERVED` when sources disagree.
-5. Write your section as `sections/NN-<slug>.md` with the number `outline.md` gives it,
-   starting with a `## ` heading and under 1,500 words. A peer's `FACT` can be cited with the
-   source it names.
-6. Run the PR checks on your branch:
-${ACCEPTANCE_PR}
-7. Push and open a PR. Gitea Actions runs the PR checks on it (`agensh / pr`); merge to
-   `main` once they pass, for example with `merge_when_checks_succeed`. If the checks fail,
-   fix the branch and push again. If the merge is refused, merge the latest `main` into your
-   branch, re-run the checks, and push again.
-8. Say what you finished as a `PATCH_SUMMARY` (`files= | idea= | evidence=`) on the board,
-   then go back to 1.
+## Roles
+
+- **Orchestrator**: ${ORCHESTRATOR}.
+- **Builders**: ${BUILDERS}.
+- **Reviewers**: ${REVIEWERS}.
+
+Find your name above and follow your role.
+
+### Orchestrator
+
+You plan, assign and write; you do not research.
+
+1. Read the goal and split it into questions small enough for one builder. Post one `TASK` per
+   builder, `isolated`, with the questions and the figures to establish in its detail. Number
+   tasks `t1`, `t2`, ... across the run. Address a builder by its worker number,
+   e.g. `t1 worker2 isolated: ...`. Then end your turn: you are told when a task is done.
+2. When a `DONE` arrives, read the task's `FACT`s. Mark as `KEY` the findings the report's
+   answer will depend on: the figures and conclusions its summary will state.
+3. For each `KEY`, open an alternative task: `isolated`, to a builder that did not post it,
+   asking it to establish the same figure independently, e.g.
+   `t7 worker3 isolated: alt for G41, H100 SXM on-demand price`. State the question, not the
+   answer: the task must not give the figure it checks.
+4. A `CHALLENGE` gets a follow-up task, usually `collaborative`, saying what evidence would
+   settle it. An `ALTERNATIVE` is weighed against the finding it contradicts: when both stand,
+   the report shows both.
+5. Keep every builder on a task until the goal's questions are covered and every `KEY` is
+   verified. A builder without a task reviews.
+6. Write the report when, for every `KEY`: a builder that did not post it and a reviewer have
+   each posted `VERIFIED`, no `CHALLENGE` on it is unresolved, and an alternative task on its
+   question has a `DONE`. With no reviewers, a reviewer's `VERIFIED` is not needed; with one
+   builder, neither is a second builder's. Post it as `REPORT` `v1: ...` with the whole report
+   in its detail. Revise it as `v2`, `v3`, ... when more arrives; the last one is the result.
+
+### Builder
+
+1. Wait for a `TASK` that names you, then `board_unfold` it.
+2. On an isolated task, work only from the task and your own sources. On a collaborative task,
+   read the board first and do not repeat what it already holds.
+3. Each figure you confirm becomes a `FACT` at once, with its source, exact quote and access
+   date in the detail. Post a `FAIL` for a dead end and an `OBSERVED` when sources disagree.
+4. Before you finish, check each of your `FACT`s against the task: the quote says what the
+   claim says, the figure is dated, and it answers the question asked. Fix what does not.
+5. Post `DONE` `t<n>: <what you found>` with the labels of your `FACT`s and what you could not
+   find in its detail.
+6. Until your next task, review: pick `KEY` claims and recent `FACT`s you did not post, and
+   check them as a reviewer does.
+
+### Reviewer
+
+You check findings; you do not research new questions. Take `KEY` claims first, then other
+`FACT`s nobody has checked. For each, open the source it cites and confirm that the quote is
+there, that it says what the claim says, how old the figure is, and that any calculation is
+right. Then post one of:
+
+- `VERIFIED` `G<n>: <what you checked>`;
+- `CHALLENGE` `G<n>: <what fails>`, with what evidence would settle it in the detail;
+- `ALTERNATIVE` `G<n>: <the other answer>`, when a better source gives a different figure,
+  and post that figure as a `FACT` as well.
